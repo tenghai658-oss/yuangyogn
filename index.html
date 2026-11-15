@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hai 劳务中介 · 一人公司 3D 看板</title>
+<style>
+:root{--ink:#24324a;--ink2:#5b6b85;--line:#e3e9f3;--card:#ffffff;--bg1:#dff3ff;--bg2:#fff6e8;
+--go:#3b82f6;--ok:#22b35e;--stuck:#ef4444;--wait:#f59e0b;--none:#9aa3b2;--accent:#ff8a3d;}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:linear-gradient(180deg,var(--bg1) 0%,#eef8ff 40%,var(--bg2) 100%);background-attachment:fixed;color:var(--ink);
+font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Noto Sans SC",system-ui,sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:18px 14px 44px}
+.card{background:var(--card);border-radius:20px;box-shadow:0 10px 30px rgba(36,50,74,.08),0 2px 6px rgba(36,50,74,.05);padding:16px 18px;margin-bottom:16px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#ffb347,#ff7a59);display:grid;place-items:center;font-size:24px;box-shadow:0 6px 14px rgba(255,122,89,.35)}
+h1{font-size:20px;margin:0;letter-spacing:.5px}
+h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+h3{font-size:15px;margin:0}
+.muted{color:var(--ink2);font-size:12.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px 8px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 10px;border-radius:999px;background:#f3f6fb;color:var(--ink2)}
+.cdot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.sync{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;padding:6px 12px;border-radius:999px;background:#f3f6fb}
+.sync .cdot{background:var(--none)}
+.sync.live .cdot{background:var(--ok);box-shadow:0 0 0 0 rgba(34,179,94,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(34,179,94,0)}100%{box-shadow:0 0 0 0 rgba(34,179,94,0)}}
+.stagecard{padding:10px}
+.stage{position:relative;height:min(66vh,640px);min-height:400px;border-radius:16px;overflow:hidden;background:linear-gradient(#bfe6ff,#e8f7ff)}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.tag{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;white-space:nowrap;text-align:center;
+background:rgba(255,255,255,.92);border-radius:12px;padding:3px 9px 4px;box-shadow:0 4px 12px rgba(36,50,74,.18);border:2px solid var(--c,#ccc);transition:transform .15s}
+.tag:hover{transform:translate(-50%,-50%) scale(1.06)}
+.tag.sel{background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.35),0 6px 16px rgba(36,50,74,.25)}
+.tag b{font-size:12.5px;display:block;line-height:1.35}
+.tag i{font-style:normal;font-size:11px;color:var(--ink2);display:block;line-height:1.3}
+.zone{position:absolute;transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:#fff;background:rgba(36,50,74,.55);padding:2px 10px;border-radius:999px;white-space:nowrap}
+.hud{position:absolute;left:10px;right:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;pointer-events:none}
+.hud .hint{background:rgba(255,255,255,.85);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--ink2);pointer-events:auto}
+.hud .btns{display:flex;gap:6px;pointer-events:auto}
+button,select{font:inherit;font-size:13px;border:none;background:#f3f6fb;color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+button:hover,select:hover{background:#e7eef9}
+.hud button{background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(36,50,74,.15)}
+.hud button.on{background:var(--go);color:#fff}
+.fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:var(--ink2)}
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+.grid2>.card{margin-bottom:0}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:1px 10px;font-size:12px;color:#fff;border-radius:999px;font-weight:600;white-space:nowrap;vertical-align:1px}
+.who{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ava{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12)}
+.kv{display:grid;grid-template-columns:80px 1fr;gap:6px 12px;font-size:13.5px;margin:0}
+.kv dt{color:var(--ink2)}
+.kv dd{margin:0;word-break:break-word}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative;padding:0 0 12px 22px;font-size:13px;word-break:break-word}
+.tl li::before{content:"";position:absolute;left:5px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--c,#999);box-shadow:0 0 0 3px #fff,0 0 0 4px var(--line)}
+.tl li::after{content:"";position:absolute;left:9px;top:18px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::after{display:none}
+.tl .t{color:var(--ink2);font-size:12px;margin-right:6px}
+.sub{margin:14px 0 8px;font-size:14px}
+.wait-item{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:#fff8ec;margin-bottom:8px;cursor:pointer}
+.wait-item.stuck{background:#fff1f1}
+.wait-item b{min-width:76px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.ecard{border-radius:18px;padding:14px;background:#fff;border:2px solid var(--line);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.ecard:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(36,50,74,.08)}
+.ecard.sel{border-color:var(--go);box-shadow:0 0 0 4px rgba(59,130,246,.15)}
+.ecard .head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ecard .head .ava{width:36px;height:36px;font-size:15px}
+.ecard .head .grow{flex:1;min-width:0}
+.logtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.log{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.log th,.log td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.log th{color:var(--ink2);font-weight:600;white-space:nowrap;background:#f7f9fc}
+.log th:first-child{border-top-left-radius:10px}.log th:last-child{border-top-right-radius:10px}
+.log td.time{white-space:nowrap;color:var(--ink2)}
+.log td.who{white-space:nowrap;font-weight:600}
+footer{color:var(--ink2);font-size:12px;text-align:center;margin-top:8px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+@media (max-width:600px){
+  .wrap{padding:12px 10px 36px}.card{border-radius:16px;padding:14px}
+  h1{font-size:17px}.logo{width:38px;height:38px;font-size:20px}
+  .stage{height:min(62vh,540px);min-height:380px}
+  .tag{padding:2px 7px 3px;border-width:2px}.tag b{font-size:11px}.tag i{display:none}
+  .zone{font-size:10.5px;padding:1px 7px}
+  .kv{grid-template-columns:68px 1fr}
+  .log th:nth-child(3),.log td:nth-child(3){display:none}
+  .hud .hint{font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="top">
+      <div class="brand"><div class="logo">🏢</div><div><h1>Hai 劳务中介 · 一人公司</h1>
+        <div class="muted">数据更新于 <b id="updated">暂无</b>（太平洋时间）　·　任务依据：<span id="assignFile">暂无</span></div></div></div>
+      <span class="sync" id="sync"><span class="cdot"></span><span id="syncText">使用内嵌数据</span></span>
+    </div>
+    <div class="chips" id="legend"></div>
+  </div>
+
+  <div class="card stagecard">
+    <div class="stage" id="stage">
+      <div class="labels" id="labels"></div>
+      <div class="hud"><span class="hint" id="hint">拖动旋转 · 滚轮或双指缩放 · 点击小人查看详情</span>
+        <span class="btns"><button type="button" id="spin">自动环绕</button><button type="button" id="reset">重置视角</button></span></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" id="detail"></div>
+    <div class="card"><h2>⏳ 谁在等 Hai</h2><div id="waiting"></div></div>
+  </div>
+
+  <div class="card"><h2>👥 全员面板</h2><div class="cards" id="cards"></div></div>
+
+  <div class="card">
+    <h2>📒 最近工作记录</h2>
+    <div class="logtools"><select id="who" aria-label="按员工筛选"></select><button id="more" type="button">显示全部</button><span class="muted" id="logCount"></span></div>
+    <div style="overflow-x:auto"><table class="log"><thead><tr><th>时间</th><th>员工</th><th>状态</th><th>说明</th></tr></thead><tbody id="logBody"></tbody></table></div>
+  </div>
+
+  <footer>数据来源：/home/box/company/工作记录.log 与 任务分配/ 目录，由 build_dashboard_data.py 生成 dashboard_data.json；没有数据的地方写「暂无」。<br>
+  通过服务器打开时每 1 分钟同步一次数据，页面每 60 分钟自动重新加载。小人的动作只是示意最新状态。3D 引擎：three.js r147（本地 vendor/）。</footer>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="vendor/RoundedBoxGeometry.js"></script>
+<script id="data" type="application/json">{"generated_at_pt": "2026-11-15 05:53", "timezone": "太平洋时间 (America/Los_Angeles)", "log_exists": true, "rules_exists": true, "pending_exists": true, "total_lines": 184, "status_counts": {"开始": 57, "完成": 72, "卡住": 11, "等Hai回复": 44}, "employees": [{"name": "大总管", "duty": "派活和验收", "status": "开始", "note": "Hai 取消引流获客「发布前须 Hai 在其聊天里亲口确认」：Hai 在大总管处批完即视为批准，可直接发；已转告引流获客，并让它立即发湖南、浙江两条已批评论", "time": "2026-11-15 05:51", "count": 104, "flow": [{"time": "2026-11-14 23:54", "status": "开始", "note": "读总规则，排首日任务分配清单"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "首日清单已排，缺工厂资料、引流平台、员工所在位置"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "已在工作群发开工帖，等五位说明职责和待补信息后合并到待Hai补充.md"}, {"time": "2026-11-14 23:55", "status": "完成", "note": "验收工厂信息表：md通过，csv表头与md不一致，退回工厂对接修改"}, {"time": "2026-11-14 23:55", "status": "完成", "note": "复验工厂信息表及两个csv，表头一致，验收通过"}, {"time": "2026-11-14 23:56", "status": "完成", "note": "更正：本人此前 5 条记录时间为 UTC，实际为太平洋时间 2026-11-14 23:54–23:55；之后统一用太平洋时间"}, {"time": "2026-11-14 23:56", "status": "完成", "note": "验收：候选人台账、招聘帖模板、评论回复话术通过；私信话术库缺邀约报名和未回复跟进，退回"}, {"time": "2026-11-14 23:56", "status": "等Hai回复", "note": "五位待补问题已合并去重为19条，写入待Hai补充.md"}, {"time": "2026-11-15 00:02", "status": "开始", "note": "按 Hai 语音指示，派私信跟进试登录微信并向文件传输助手发测试消息"}, {"time": "2026-11-15 00:05", "status": "完成", "note": "核实微信：网页版 wx.qq.com 仍是扫码登录入口但不少账号会提示不能登录网页微信；官方有 Windows/Mac/Linux 客户端可扫码登录；第三方多开/协议工具不合规有封号风险，合规替代是企业微信；私信跟进目前在电脑浏览器里试网页版"}, {"time": "2026-11-15 00:06", "status": "等Hai回复", "note": "Hai 称已扫码登录，已向私信跟进追问登录结果、所用方式、回复流程和报错，等其回报"}, {"time": "2026-11-15 00:06", "status": "开始", "note": "按 Hai 语音指示，派私信跟进安装微信官方 Linux 客户端、扫码登录并向文件传输助手发测试消息；私信回复是否免批准已问 Hai"}, {"time": "2026-11-15 00:07", "status": "完成", "note": "已转告私信跟进：Hai 确认私信回复（含测试消息）一律先写草稿交 Hai 批准后再发，登录后汇总草稿给 Hai"}, {"time": "2026-11-15 00:11", "status": "等Hai回复", "note": "私信跟进已装好微信官方Linux桌面端4.1.13.26；Hai称已扫码登录，已追问是否完整登录（非仅传输文件模式）及能否收发、是否可开始汇总草稿"}, {"time": "2026-11-15 00:11", "status": "开始", "note": "私信跟进确认微信桌面端完整登录（非仅传输文件），暂无求职者私信；按 Hai 语音指示让其向文件传输助手发测试消息"}, {"time": "2026-11-15 00:58", "status": "开始", "note": "安排员工下载QQ号供Hai小号测试回复：指定评论回复下载注册QQ"}, {"time": "2026-11-15 00:59", "status": "开始", "note": "按 Hai 更正，QQ注册任务从评论回复改派给私信跟进，供Hai小号测试私信回复；已通知评论回复停止"}, {"time": "2026-11-15 00:59", "status": "开始", "note": "私信和评论两位员工均安排下载微信和QQ：私信跟进微信已装好登录、QQ注册继续；评论回复恢复QQ注册并加装微信桌面端"}, {"time": "2026-11-15 01:00", "status": "完成", "note": "查存储：五位员工共用一台电脑硬盘，总128G已用7.0G剩121G；无单独云端空间"}, {"time": "2026-11-15 01:01", "status": "等Hai回复", "note": "QQ官方下载对本机网络返回403（私信跟进、评论回复都卡住）；评论回复微信已装好待定登录账号；私信跟进微信测试消息待Hai批准"}, {"time": "2026-11-15 01:01", "status": "完成", "note": "查微信共用情况：系统装一份4.1.13.26全员可开；本机仅一个微信号的数据（Hai扫码给私信跟进的号）；无多用户设置，同一系统用户共用数据目录；同号同时只能一台电脑在线，多人同时用需不同微信号"}, {"time": "2026-11-15 01:03", "status": "等Hai回复", "note": "QQ 改用桌面端下载安装：已通知私信跟进和评论回复只装官方桌面端；官方安装包对本机网络返回403，等Hai开启网络设置后重下"}, {"time": "2026-11-15 01:04", "status": "开始", "note": "私信跟进退出微信；Hai 改用 QQ 安卓桌面版：本机有KVM可跑安卓模拟器（无binder不能用Waydroid），开始安装模拟器并尝试官方QQ安卓包"}, {"time": "2026-11-15 01:05", "status": "等Hai回复", "note": "更正：QQ 用 PC 桌面版，非安卓版；私信跟进退出微信。已停安卓模拟器安装；本机为Linux，待Hai定用官方Linux版QQ还是Wine跑Windows版，下载仍受403影响"}, {"time": "2026-11-15 01:07", "status": "卡住", "note": "Hai 设置页找不到 Egress，界面说明里也没有这一项；建议 Hai 用自己的网络下载 QQ Linux deb 后发给我，再由我安装｜等 Hai 回复"}, {"time": "2026-11-15 01:09", "status": "开始", "note": "Egress 已设为允许所有，通知两位员工重试 QQ Linux 版下载｜等员工报告"}, {"time": "2026-11-15 01:11", "status": "等Hai回复", "note": "评论回复报告 QQ deb 仍是 403，dpkg 显示未安装；Hai 决定自己下载 deb 发到聊天，已把官网页面和 deb 地址发给 Hai｜等安装包"}, {"time": "2026-11-15 01:12", "status": "等Hai回复", "note": "私信跟进报告：电脑上微信已经是未登录状态（停在扫码页），建议 Hai 在手机上退出 Linux 微信确认；已让私信跟进停止重试 QQ，等 Hai 发 deb｜等Hai"}, {"time": "2026-11-15 01:13", "status": "等Hai回复", "note": "QQ deb 太大聊天发不上；实测本机能访问 Google Drive、Dropbox（OneDrive 返回 403），建议 Hai 用公开分享链接发来｜等链接"}, {"time": "2026-11-15 01:17", "status": "完成", "note": "回答 Hai 关于 Google Drive 分享链接隐私的问题：无需登录，只能拿到该文件，本机会留文件和链接记录，出口代理日志无法确认｜等链接"}, {"time": "2026-11-15 01:33", "status": "卡住", "note": "Google Drive 链接下载跳转到登录页（文件未公开分享），请 Hai 改为“知道链接的任何人”｜等Hai"}, {"time": "2026-11-15 01:35", "status": "完成", "note": "从 Hai 的 Google Drive 链接下载 QQ Linux deb 并安装成功（包内实际版本 3.2.35-54395，不是 3.2.33）；直接启动会因 GPU 报错退出，加参数 /opt/QQ/qq --disable-gpu --disable-software-rasterizer --no-sandbox 可正常打开 QQ 窗口；未登录未注册，安装包已删除｜通知私信跟进、评论回复"}, {"time": "2026-11-15 01:36", "status": "完成", "note": "验收通过：私信跟进桌面上 QQ 能正常打开，停在扫码登录页，没登录也没注册｜等 Hai 定 QQ 账号"}, {"time": "2026-11-15 01:44", "status": "开始", "note": "私信跟进 QQ 已扫码登录；Hai 要做私信演示，候选人台账为空，已安排私信跟进只查看 QQ 里有没有真实咨询，并写开场私信草稿，交 Hai 批准后才发｜等私信跟进"}, {"time": "2026-11-15 01:45", "status": "开始", "note": "Hai 语音批准测试：私信跟进用 QQ 直接回复正在聊天的「ɵ°」一条（不报数字、不承诺），交回原文和截图｜等私信跟进"}, {"time": "2026-11-15 01:46", "status": "等Hai回复", "note": "Hai 语音亲口批准私信跟进直接回复 QQ「ɵ°」一条，已原话转达；等 Hai 交还桌面，私信跟进可能要求 Hai 在其对话里亲口确认｜等交还桌面"}, {"time": "2026-11-15 01:51", "status": "完成", "note": "Hai 语音定新规则（立即生效）：私信跟进遇到普通聊天，只要不涉及敏感内容（不报工资、不涉及数字、不做承诺、不涉及法律或纠纷），可以直接回复，不用交草稿、不用等批准；重要或敏感的事仍然汇总给 Hai。已转告私信跟进｜无"}, {"time": "2026-11-15 01:51", "status": "完成", "note": "验收通过：私信跟进用 QQ 回复「ɵ°」一条（Hai 在私信跟进对话里亲自批准），截图核对原文一致，发送成功，对方暂未回｜等对方回复"}, {"time": "2026-11-15 01:51", "status": "完成", "note": "按 Hai 语音确认修改总规则：第一条新增「普通聊天直接回复」，第二条「发消息」改为敏感或重要的才需批准；原文件已备份"}, {"time": "2026-11-15 02:01", "status": "完成", "note": "按 Hai 要求写好 /home/box/company/自动审核教程.md"}, {"time": "2026-11-15 02:02", "status": "完成", "note": "搜到 Grok Bot 自动审核官方文档，已发给 Hai，并按官方说明更新 自动审核教程.md"}, {"time": "2026-11-15 02:04", "status": "开始", "note": "Hai 语音要求私信跟进给 QQ「ɵ°」发一条打招呼消息（普通聊天，按新规则直接发），交原文和截图验收"}, {"time": "2026-11-15 02:06", "status": "完成", "note": "按 Hai 语音要求改总规则：私信跟进 QQ（苏苏爱吃鱼）收到私信，不涉敏感（提工资或数字、做承诺、涉法律、涉纠纷）就直接自动回复，不再弹批准、不问 Hai；已转告私信跟进"}, {"time": "2026-11-15 02:07", "status": "完成", "note": "验收私信跟进 QQ「ɵ°」回复：截图核对原文一致、已发出、不涉敏感，通过；打招呼那条因对方已在聊未发，合理。岗位表为空，后续问岗位/工资需 Hai 提供真实岗位"}, {"time": "2026-11-15 02:07", "status": "完成", "note": "按 Hai 语音补充总规则：QQ 苏苏爱吃鱼的普通闲聊、寒暄也可直接回复，不限工作话题；只有提工资、做承诺、涉法律、涉纠纷才交草稿给 Hai；已转告私信跟进"}, {"time": "2026-11-15 02:09", "status": "完成", "note": "查 QQ 回复慢：日志显示 01:51 到 02:04 之间私信跟进没有查看 QQ 的记录，02:04 收到指令后 02:05 回复；本次无等批准、等桌面；QQ 进程正常运行，CPU 和内存占用低"}, {"time": "2026-11-15 02:09", "status": "开始", "note": "Hai 语音同意：让私信跟进自建每 5 分钟检查 QQ 苏苏爱吃鱼未读私信的定时任务，不敏感直接回，敏感交草稿；等私信跟进回报建好"}, {"time": "2026-11-15 02:10", "status": "开始", "note": "Hai 语音纠正：不用 5 分钟轮询，改为 QQ 来消息即触发；已让私信跟进删掉定时任务，并先查 QQ 新消息能否被脚本发现（桌面通知等），再用 webhook 例行任务唤醒"}, {"time": "2026-11-15 02:11", "status": "等Hai回复", "note": "Hai 语音取消触发式方案（不用网址、密钥、脚本），要私信跟进直接盯 QQ 和微信；已让私信跟进停掉脚本方案、保留定时任务，等 Hai 定检查频率"}, {"time": "2026-11-15 02:12", "status": "完成", "note": "Hai 语音定：私信跟进核心职责是守 QQ（苏苏爱吃鱼）和微信私信，不敏感直接回、敏感交草稿；定时任务、触发脚本、网址密钥全部取消（已确认删除）；已转告私信跟进"}, {"time": "2026-11-15 02:13", "status": "开始", "note": "Hai 语音定：私信跟进建每 5 分钟定时任务检查 QQ 苏苏爱吃鱼和微信未读，不敏感直接回、敏感交草稿；已通知，等私信跟进回报建好"}, {"time": "2026-11-15 02:15", "status": "开始", "note": "私信跟进定时任务「QQ 微信私信巡检」已建（每 5 分钟）；Hai 语音要求测试连续对话：私信跟进主动给 ɵ° 发一条，靠巡检多轮来回，满 3 轮或 30 分钟没回或遇敏感即结束，交记录和截图"}, {"time": "2026-11-15 02:17", "status": "完成", "note": "按 Hai 语音在总规则第一条加：私信跟进主动发的普通消息（不提工资或数字、不承诺、不涉法律纠纷）也直接发，不用问 Hai；已转告私信跟进马上执行"}, {"time": "2026-11-15 02:18", "status": "完成", "note": "查连续对话延迟：第二轮 ɵ° 约 02:07 来消息（私信跟进报的，无截图核对），02:17 巡检才回，约 10 分钟；当时巡检任务 02:12 已删、02:13 才重建，是等巡检；QQ 进程正常、占用低"}, {"time": "2026-11-15 02:20", "status": "开始", "note": "Hai 语音要求重做脚本方案：排查 QQ 新消息可被脚本抓到的信号；让私信跟进建 webhook 例行任务「QQ 新消息触发」；5 分钟巡检暂留作备用"}, {"time": "2026-11-15 02:20", "status": "完成", "note": "私信跟进已建 webhook 例行任务「QQ 新消息触发」，巡检保留；触发网址和密钥需 Hai 从任务面板复制，等 QQ 信号排查结果后一起找 Hai"}, {"time": "2026-11-15 02:29", "status": "开始", "note": "Hai 语音要求马上做触发脚本：以 QQ 消息库文件 nt_msg.db 变化为触发条件，防抖后调用「QQ 新消息触发」网址，后台常驻；密钥待 Hai 提供，五分钟巡检保留兜底"}, {"time": "2026-11-15 02:29", "status": "完成", "note": "验收连续对话测试：截图核对，3 轮来回都靠巡检完成，但 02:17、02:27 两条及 01:50 打招呼那条均丢字（之前我验收 01:50 那条通过是错的），退回；私信跟进已暂停巡检，改复制粘贴发送后再开"}, {"time": "2026-11-15 02:32", "status": "完成", "note": "验收私信跟进复制粘贴发送测试：截图输入框文字完整无丢字，未发出，通过；两个巡检任务已改为粘贴发送，巡检已恢复"}, {"time": "2026-11-15 02:33", "status": "完成", "note": "Hai 已知自动回复可能违反 QQ 用户协议第8.2.3条（非人工方式发信息）、有封号风险，仍决定继续自动回复 QQ 私信；总规则不改，已转告私信跟进"}, {"time": "2026-11-15 02:33", "status": "完成", "note": "QQ 新消息触发脚本已部署并自测通过：inotify 监听 nt_msg.db/wal，防抖10秒、间隔60秒；本机无 systemd/cron，用 setsid 重启循环加30秒检查守护；webhook 待配置；正式进程 135190"}, {"time": "2026-11-15 02:33", "status": "等Hai回复", "note": "QQ 触发脚本已部署常驻并核实在跑（脚本135190/守护135033/watchdog135026），等 Hai 给触发网址和密钥后填配置才会真正触发"}, {"time": "2026-11-15 02:56", "status": "开始", "note": "Hai 要求优先跑通 QQ 脚本，暂缓任务分配清单"}, {"time": "2026-11-15 02:59", "status": "卡住", "note": "QQ 新消息触发的面板和直达链接都不显示 Webhook URL 原文，请求头 Authorization 和密钥已齐，只缺网址；替 Hai 报开发团队时因隐私模式失败，需 Hai 自己从帮助菜单反馈或发邮件给 support@x.ai"}, {"time": "2026-11-15 03:00", "status": "卡住", "note": "按 Hai 要求在共享电脑上找 QQ 新消息触发的 Webhook URL：配置目录、环境变量、agent-data 都搜过，没有网址原文；App 在 Hai 自己电脑上，不在这台"}, {"time": "2026-11-15 03:41", "status": "等Hai回复", "note": "私信跟进报 QQ 苏苏爱吃鱼 03:39 起显示连接已断开，未自动恢复，掉线期间收不到私信；已让私信跟进试一下普通重连，要扫码或验证就停下等 Hai"}, {"time": "2026-11-15 04:35", "status": "开始", "note": "按 Hai 语音要求，派私信跟进重新登录 QQ 苏苏爱吃鱼，登上后给 ɵ° 发「测试，收到请回复」并回报"}, {"time": "2026-11-15 04:38", "status": "等Hai回复", "note": "QQ 重启后登录苏苏爱吃鱼失败，提示「你的用户身份已失效…请你重新登录」，需 Hai 亲自扫码或账密登录；测试消息 Hai 已让先别发"}, {"time": "2026-11-15 04:39", "status": "开始", "note": "Hai 说 QQ 已登上，转告私信跟进给 ɵ° 发「测试，收到请回复」并持续来回聊天，每轮记原文、时间、连接状态，不回或断开就停下报告"}, {"time": "2026-11-15 04:58", "status": "等Hai回复", "note": "ɵ° 已追问手工费和有哪些厂，岗位表和工厂信息表仍空，私信跟进只能追问基本情况；需 Hai 提供真实在招岗位交工厂对接录入"}, {"time": "2026-11-15 05:05", "status": "完成", "note": "Hai 再次明确：要一人专门做引流，在抖音、微信、小红书等平台的工厂招聘帖下评论，把求职者引来加公司微信；已在总规则加第七条，平台范围写为抖音、快手、小红书，负责人待 Hai 确认"}, {"time": "2026-11-15 05:06", "status": "完成", "note": "Hai 定稿：引流评论平台只限小红书、抖音、快手（微信不加），负责人引流获客；流程是引流获客发评论（每条先交草稿批）、求职者加公司微信、私信跟进接手；已写进总规则第七条"}, {"time": "2026-11-15 05:08", "status": "开始", "note": "Hai 指示：引流获客在小红书、抖音、快手的招聘帖下试做引流评论，并看各平台私信能不能用；已派活，评论草稿逐条交 Hai 批，评论和私信都不发、不注册账号"}, {"time": "2026-11-15 05:10", "status": "等Hai回复", "note": "引流获客试做引流评论卡住：小红书加载报错，抖音不登录搜不了，快手搜不到结果且评论要登录；需 Hai 定是否用公司账号登录并亲自扫码"}, {"time": "2026-11-15 05:11", "status": "完成", "note": "Hai 决定：不用公司账号登录小红书、抖音、快手，引流评论任务暂停，不扫码不输密码；已转告引流获客"}, {"time": "2026-11-15 05:11", "status": "开始", "note": "Hai 更正：不用公司账号，改用 Hai 个人账号登录小红书、抖音、快手做引流评论；已转告引流获客请 Hai 在它聊天里自己扫码或输密码，登录后找帖子写评论草稿、查私信功能，评论逐条交 Hai 批"}, {"time": "2026-11-15 05:18", "status": "开始", "note": "Hai 指示：三个平台先做小红书，抖音快手排后面；已转告引流获客只开小红书登录页，等 Hai 用个人号登录，登上后找帖子写评论草稿、查私信功能，评论逐条交 Hai 批"}, {"time": "2026-11-15 05:21", "status": "开始", "note": "Hai 说小红书登录页疑似国际版，已让引流获客查网址，是国际版就改开国内版 xiaohongshu.com 中文扫码登录页"}, {"time": "2026-11-15 05:23", "status": "开始", "note": "Hai 已用个人号登录国内版小红书；已转告引流获客继续找工厂招聘帖，每条配一句引导加微信的评论草稿（不报数字不做承诺），查私信入口和限制，评论一条不发、全部交 Hai 批"}, {"time": "2026-11-15 05:29", "status": "开始", "note": "Hai 纠正方向：引流评论要找求职者发的帖子（求职、找工作、普工求职），不是工厂招聘帖、也不联系公司；已改总规则第七条并转告引流获客重新做，评论草稿不报数字不做承诺，全部交 Hai 批"}, {"time": "2026-11-15 05:30", "status": "完成", "note": "验收引流获客小红书草稿：退回，3 条都是工厂招聘帖，跟 Hai 纠正后的方向（找求职者的帖子）不一致，已让它重新找求职帖写草稿；私信入口和限制已查清"}, {"time": "2026-11-15 05:30", "status": "完成", "note": "按 Hai 指示删掉总规则第七条里所有找工厂招聘帖的内容，只保留找求职者帖子引流"}, {"time": "2026-11-15 05:31", "status": "开始", "note": "Hai 补充引流评论要求：评论把求职者引到公司小红书号，不直接写微信号；话术像真人、精准不生硬；戳中求职者痛点。已转告引流获客按此重写小红书草稿，每条交 Hai 批"}, {"time": "2026-11-15 05:32", "status": "完成", "note": "Hai 回复：公司小红书号就用他刚登录的个人号；总规则第七条不改，评论把人引到小红书号，再由私信跟进转到微信。已转告引流获客"}, {"time": "2026-11-15 05:33", "status": "开始", "note": "Hai 要求求职帖评论更精准：优先找急着找工作的人（如有欠款、着急上班），话术对准这类人的痛点；已转告引流获客，并要求不承诺、不借贷、不施压"}, {"time": "2026-11-15 05:33", "status": "完成", "note": "Hai 简化找人标准：只找准备找工作的人，不再加欠款、紧迫等条件；已转告引流获客，评论草稿仍先交 Hai 批"}, {"time": "2026-11-15 05:33", "status": "完成", "note": "Hai 放宽找人范围：只要愿意进厂的求职者都要，不挑急不急、有没有欠款；已转告引流获客，评论草稿仍先交 Hai 批"}, {"time": "2026-11-15 05:34", "status": "开始", "note": "Hai 问为什么看不到引流获客发的评论；查日志和草稿，没有任何发布记录，已让引流获客如实确认有没有发过"}, {"time": "2026-11-15 05:34", "status": "完成", "note": "Hai 要求评论话术要短、像真人随手打的，不能像作文；已转告引流获客重写时照做，每条仍先交 Hai 批"}, {"time": "2026-11-15 05:35", "status": "开始", "note": "Hai 问引流获客找求职帖的筛选标准；已报已定部分（关键词、只看求职者自己发的帖、跳过招聘帖），时间、地区、互动量未定，已问引流获客实际在用的"}, {"time": "2026-11-15 05:36", "status": "开始", "note": "Hai 扩大引流范围：求职帖下面评论的求职者也是目标，可以私信；已转告引流获客把这些人列进私信名单并写私信草稿，短、像真人、戳痛点，每条先交 Hai 批"}, {"time": "2026-11-15 05:36", "status": "等Hai回复", "note": "验收引流获客小红书求职帖评论草稿第二版：通过，第1、2条交 Hai 批，第3条（行政文员）不评；已让引流获客再找 3 条进厂求职帖，并给帖子下的求职者写私信草稿"}, {"time": "2026-11-15 05:37", "status": "完成", "note": "Hai 再次纠正筛选标准：去掉「想进厂做普工」，只要在找工作的人都私信，来者不拒；已转告引流获客，私信草稿仍先交 Hai 批"}, {"time": "2026-11-15 05:37", "status": "开始", "note": "Hai 批准小红书求职帖评论第1条（湖南日结）和第2条（浙江），第3条成都文员帖不评；已转告引流获客发前核对原文，只发这两条"}, {"time": "2026-11-15 05:37", "status": "完成", "note": "Hai 指示引流获客优先找广东求职者，重点东莞、广州、佛山，搜索加地区关键词；在找工作的人都写私信草稿，每条先交 Hai 批；已转告"}, {"time": "2026-11-15 05:38", "status": "完成", "note": "Hai 指示引流获客把合适求职帖下的评论全部看完，在找工作的都写私信草稿，不漏，每条先交 Hai 批；已转告"}, {"time": "2026-11-15 05:45", "status": "开始", "note": "Hai 再次批准湖南日结和浙江两条小红书评论都发；已转告引流获客立即发送，发完回报结果和截图"}, {"time": "2026-11-15 05:45", "status": "完成", "note": "Hai 强调同一帖子下不能发两条评论：湖南日结帖、浙江求职帖各发各的那一条，不重复；已转告引流获客"}, {"time": "2026-11-15 05:45", "status": "完成", "note": "Hai 再次明确：帖子下在找工作的评论者也可私信，写私信草稿交 Hai 批，批了再发；已转告引流获客"}, {"time": "2026-11-15 05:46", "status": "完成", "note": "Hai 指示：求职帖下在找工作的评论者每一个都写私信草稿，不漏人，交 Hai 批后再发；已转告引流获客"}, {"time": "2026-11-15 05:46", "status": "完成", "note": "Hai 明确：评论者里只私信真正在找工作的，招聘方、中介、发招聘信息的一律不发；已转告引流获客"}, {"time": "2026-11-15 05:47", "status": "完成", "note": "Hai 补充：帖子下的招聘者、中介是竞争对手，一律不私信，与「只私信真正在找工作的」合并执行；已转告引流获客"}, {"time": "2026-11-15 05:47", "status": "完成", "note": "Hai 要求引流获客重转化：评论和私信要让求职者主动来公司小红书号或加微信，不是发了就算，Hai 批稿时看转化效果；已转告引流获客，并让它记录每条发出后有没有回复、有没有来"}, {"time": "2026-11-15 05:51", "status": "开始", "note": "Hai 取消引流获客「发布前须 Hai 在其聊天里亲口确认」：Hai 在大总管处批完即视为批准，可直接发；已转告引流获客，并让它立即发湖南、浙江两条已批评论"}], "assignments": [{"priority": "P3", "task": "验收以上 5 份交付物，汇总需 Hai 提供的信息", "deliverable": "验收结论 + 给 Hai 的汇总", "standard": "严格对照交付标准；不合格退回并写原因"}], "counts": {"开始": 35, "完成": 46, "卡住": 4, "等Hai回复": 19}, "acceptance": []}, {"name": "引流获客", "duty": "招聘文案 / 发帖计划", "status": "等Hai回复", "note": "湖南、浙江两条评论 Hai 已在其聊天确认，收集完评论者后发送；「大总管批完就算数」需 Hai 在引流获客聊天里亲口说才生效", "time": "2026-11-15 05:52", "count": 18, "flow": [{"time": "2026-11-14 23:54", "status": "开始", "note": "读完总规则，准备为在招岗位写招聘文案"}, {"time": "2026-11-14 23:54", "status": "卡住", "note": "/home/box/company/ 下还没有任何在招岗位资料，无法写文案，已找大总管和 Hai 要资料"}, {"time": "2026-11-14 23:55", "status": "等Hai回复", "note": "已在工作群列出需要 Hai 补充的引流背景问题（平台、账号、咨询方式、预算）"}, {"time": "2026-11-14 23:55", "status": "完成", "note": "招聘帖模板 2 版已交付 /home/box/company/草稿/招聘帖模板.md，待大总管验收"}, {"time": "2026-11-14 23:55", "status": "完成", "note": "更正：本人此前 4 条记录时间为 UTC，实际太平洋时间为 2026-11-14 23:54 前后；之后统一用太平洋时间"}, {"time": "2026-11-15 04:55", "status": "开始", "note": "按 Hai 语音要求研究短视频素材来源、AI 视频工具，设计 3 套无真人出镜招工视频方案"}, {"time": "2026-11-15 04:56", "status": "开始", "note": "调研无真人出镜招工短视频素材来源、费用与三套方案，完成后写入草稿/短视频素材与方案.md"}, {"time": "2026-11-15 05:00", "status": "完成", "note": "无真人出镜招工短视频素材调研与三套方案已写入 /home/box/company/草稿/短视频素材与方案.md"}, {"time": "2026-11-15 05:08", "status": "开始", "note": "按大总管派活，在小红书/抖音/快手找工厂招聘帖、写引流评论草稿并核查私信功能（不发评论不发私信）"}, {"time": "2026-11-15 05:10", "status": "卡住", "note": "三平台不登录看不到招聘帖：小红书页面加载失败，抖音搜索弹登录框，快手搜索结果空白；未登录未注册未发任何内容，已报大总管"}, {"time": "2026-11-15 05:11", "status": "完成", "note": "按大总管转达，引流评论任务暂停，不登录三个平台，已关闭小红书/抖音/快手页面，等下一步安排"}, {"time": "2026-11-15 05:26", "status": "等Hai回复", "note": "小红书在引流获客浏览器里仍未登录，等 Hai 点新的登录确认链接再扫码；除登录页外都会跳到国际版 rednote，建议打开流量经过本机"}, {"time": "2026-11-15 05:30", "status": "等Hai回复", "note": "小红书 3 条招聘帖和评论草稿已写好：/home/box/company/草稿/小红书引流评论草稿.md，已交大总管汇总，未发任何评论或私信"}, {"time": "2026-11-15 05:30", "status": "开始", "note": "方向改为在小红书找求职者自己发的帖子（求职/找工作/普工求职），写引导加微信的评论草稿，不发"}, {"time": "2026-11-15 05:36", "status": "等Hai回复", "note": "小红书求职帖 3 条和评论草稿已写好：/home/box/company/草稿/小红书求职帖评论草稿.md，交大总管汇总，未发任何评论"}, {"time": "2026-11-15 05:47", "status": "完成", "note": "建好引流效果跟踪表 /home/box/company/草稿/引流效果跟踪表.csv（目前没有任何已发出记录）"}, {"time": "2026-11-15 05:51", "status": "开始", "note": "Hai 在我的聊天里回复「发」，确认用 Hai 小红书号发两条已批准评论（倒霉电饭煲帖、多米兔帖），等当前收集评论者的浏览器任务结束后马上发"}, {"time": "2026-11-15 05:52", "status": "等Hai回复", "note": "湖南、浙江两条评论 Hai 已在其聊天确认，收集完评论者后发送；「大总管批完就算数」需 Hai 在引流获客聊天里亲口说才生效"}], "assignments": [{"priority": "P2", "task": "写招聘帖通用模板 2 版（短视频口播版、图文版）", "deliverable": "/home/box/company/草稿/招聘帖模板.md", "standard": "工资、福利、厂名用【待填：来源】占位；标注【需 Hai 批准】才能发布；不含任何对外承诺"}], "counts": {"开始": 6, "完成": 5, "卡住": 2, "等Hai回复": 5}, "acceptance": [{"time": "2026-11-14 23:56", "note": "验收：候选人台账、招聘帖模板、评论回复话术通过；私信话术库缺邀约报名和未回复跟进，退回"}, {"time": "2026-11-15 05:30", "note": "验收引流获客小红书草稿：退回，3 条都是工厂招聘帖，跟 Hai 纠正后的方向（找求职者的帖子）不一致，已让它重新找求职帖写草稿；私信入口和限制已查清"}, {"time": "2026-11-15 05:36", "note": "验收引流获客小红书求职帖评论草稿第二版：通过，第1、2条交 Hai 批，第3条（行政文员）不评；已让引流获客再找 3 条进厂求职帖，并给帖子下的求职者写私信草稿"}]}, {"name": "候选人跟进", "duty": "候选人台账与入职跟进", "status": "等Hai回复", "note": "需要 Hai 告知候选人资料来源、面试体检入职流程和台账存放位置", "time": "2026-11-14 23:54", "count": 4, "flow": [{"time": "2026-11-14 23:54", "status": "开始", "note": "读完总规则，建好空白候选人台账模板"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "目前没有任何候选人资料和在招岗位信息，需要 Hai 告知来源"}, {"time": "2026-11-14 23:54", "status": "完成", "note": "按首日分工建好候选人台账模板 /home/box/company/候选人台账.md（无任何候选人数据）"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "需要 Hai 告知候选人资料来源、面试体检入职流程和台账存放位置"}], "assignments": [{"priority": "P1", "task": "建立候选人台账模板", "deliverable": "/home/box/company/候选人台账.md", "standard": "字段齐全：来源渠道、姓名/昵称、联系方式（只记来源，不编）、意向岗位、状态（新线索/已联系/已报名/已到岗/流失）、下次跟进时间、备注；不编任何候选人"}], "counts": {"开始": 1, "完成": 1, "卡住": 0, "等Hai回复": 2}, "acceptance": [{"time": "2026-11-14 23:56", "note": "验收：候选人台账、招聘帖模板、评论回复话术通过；私信话术库缺邀约报名和未回复跟进，退回"}]}, {"name": "工厂对接", "duty": "岗位需求与返佣结算", "status": "完成", "note": "按大总管验收意见把两个 csv 表头改成和工厂信息表.md 完全一致", "time": "2026-11-14 23:55", "count": 5, "flow": [{"time": "2026-11-14 23:54", "status": "开始", "note": "读完总规则，建立在招岗位表和返佣结算跟踪表模板"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "表格模板已建好，但还没有任何合作工厂资料，等 Hai 提供工厂名单和岗位、返佣信息"}, {"time": "2026-11-14 23:54", "status": "完成", "note": "按任务分配建好 工厂信息表.md（含在招岗位表和返佣结算跟踪表，全部「暂无」），交大总管验收"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "已在工作群发职责和需 Hai 补充的工厂资料问题清单"}, {"time": "2026-11-14 23:55", "status": "完成", "note": "按大总管验收意见把两个 csv 表头改成和工厂信息表.md 完全一致"}], "assignments": [{"priority": "P1", "task": "建立工厂信息表模板", "deliverable": "/home/box/company/工厂信息表.md", "standard": "字段齐全：工厂名、地点、岗位、工资、工时、食宿、年龄/性别要求、返佣标准、结算方式、联系人、信息来源；内容全部留空或写「暂无」，不编任何工厂和数字"}], "counts": {"开始": 1, "完成": 2, "卡住": 0, "等Hai回复": 2}, "acceptance": [{"time": "2026-11-14 23:55", "note": "验收工厂信息表：md通过，csv表头与md不一致，退回工厂对接修改"}, {"time": "2026-11-14 23:55", "note": "复验工厂信息表及两个csv，表头一致，验收通过"}]}, {"name": "评论回复", "duty": "评论整理与回复草稿", "status": "卡住", "note": "QQ官方deb下载仍返回403（未装过linuxqq），等微信扫码交回后改用浏览器下载再试", "time": "2026-11-15 01:10", "count": 10, "flow": [{"time": "2026-11-14 23:54", "status": "开始", "note": "读完总规则，搭建评论汇总表、话术库、意向用户清单模板"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "模板已建好，缺岗位表和评论来源，需 Hai 告知评论在哪些平台、是否向求职者收费"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "已在工作群报职责和待补问题，等评论来源、收费口径和岗位表"}, {"time": "2026-11-15 00:58", "status": "开始", "note": "按大总管转达的任务，从官方渠道下载安装 Linux QQ，准备注册"}, {"time": "2026-11-15 00:59", "status": "完成", "note": "QQ任务按大总管通知已停止：只到下载安装包一步，官方链接从本机下载返回403，未安装、未打开注册页、未提交任何信息"}, {"time": "2026-11-15 00:59", "status": "开始", "note": "按大总管转达，恢复QQ任务并安装官方微信Linux客户端"}, {"time": "2026-11-15 01:00", "status": "等Hai回复", "note": "微信官方客户端已在电脑上（之前已有人装过同版本4.1.13.26）；QQ官方下载报403；登录/注册前等Hai本人确认"}, {"time": "2026-11-15 01:03", "status": "等Hai回复", "note": "微信已打开到扫码登录页，屏幕交给Hai扫码"}, {"time": "2026-11-15 01:09", "status": "开始", "note": "重新从QQ官网下载Linux版deb"}, {"time": "2026-11-15 01:10", "status": "卡住", "note": "QQ官方deb下载仍返回403（未装过linuxqq），等微信扫码交回后改用浏览器下载再试"}], "assignments": [{"priority": "P2", "task": "写常见评论回复话术（问工资、问地点、问是否收费、问年龄、质疑骗子）", "deliverable": "/home/box/company/草稿/评论回复话术.md", "standard": "每类 2 条以内；涉及数字处用占位；标注【需 Hai 批准】才能公开回复"}], "counts": {"开始": 4, "完成": 1, "卡住": 1, "等Hai回复": 4}, "acceptance": [{"time": "2026-11-14 23:56", "note": "验收：候选人台账、招聘帖模板、评论回复话术通过；私信话术库缺邀约报名和未回复跟进，退回"}]}, {"name": "私信跟进", "duty": "私信咨询整理与回复草稿", "status": "完成", "note": "QQ 回复 ɵ°「好的」（05:05 太平洋时间，复制粘贴，已对字）：请对方方便时说城市/做过的活/年龄；QQ 已连接", "time": "2026-11-15 05:05", "count": 43, "flow": [{"time": "2026-11-14 23:54", "status": "开始", "note": "读完总规则，建立私信汇总表、话术库、移交名单三个工作文件"}, {"time": "2026-11-14 23:54", "status": "等Hai回复", "note": "三个工作文件模板已建好，目前没有私信来源和岗位表，等 Hai 告知私信在哪个平台、怎么拿到"}, {"time": "2026-11-14 23:55", "status": "等Hai回复", "note": "已在工作群发职责和5个待 Hai 补充的问题（私信平台、谁来发、收费口径、合格标准、收集字段）"}, {"time": "2026-11-15 00:02", "status": "开始", "note": "按大总管转派，在我电脑上打开微信网页版登录页，看能否登录"}, {"time": "2026-11-15 00:06", "status": "卡住", "note": "微信网页版扫码后提示：为了保障你的账号安全，暂不支持使用网页版微信，登录失败，未发任何消息"}, {"time": "2026-11-15 00:07", "status": "开始", "note": "已装好微信官方 Linux 客户端 4.1.13.26，正在启动到登录二维码"}, {"time": "2026-11-15 00:08", "status": "等Hai回复", "note": "微信桌面版已启动到扫码登录界面，已把屏幕交给 Hai 扫码"}, {"time": "2026-11-15 00:11", "status": "等Hai回复", "note": "微信桌面版已完整登录，能看到会话列表，暂无求职者私信；测试消息草稿已交 Hai 批准，未发"}, {"time": "2026-11-15 00:59", "status": "开始", "note": "按大总管转派，下载官方 Linux QQ 并准备注册 QQ 号"}, {"time": "2026-11-15 01:00", "status": "卡住", "note": "官方 Linux QQ 安装包下载被拒：Access to qqdl.gtimg.cn was denied... HTTP ERROR 403，curl 和浏览器都一样，没用非官方包"}, {"time": "2026-11-15 01:11", "status": "开始", "note": "微信已关掉重开，停在扫码页（显示 Network disconnected / Scan again），没进会话列表；开始用浏览器重新下载官方 Linux QQ"}, {"time": "2026-11-15 01:12", "status": "等Hai回复", "note": "已停掉浏览器下载 QQ，等 Hai 下好 deb 安装包后再装（不登录、不注册）"}, {"time": "2026-11-15 01:36", "status": "等Hai回复", "note": "QQ 3.2.35 已在我桌面打开，停在「手机QQ扫码登录」页，没登录没注册，等 Hai 定用哪个账号"}, {"time": "2026-11-15 01:45", "status": "等Hai回复", "note": "QQ 已登录（昵称 苏苏爱吃鱼），列表里有 1 个会话「ɵ°」2 条未读，预览只显示「你是」；桌面还在 Hai 手里，等他交还后再打开看，不发消息"}, {"time": "2026-11-15 01:49", "status": "等Hai回复", "note": "桌面能操作了，读完 QQ「ɵ°」4 条消息（你是？/你是/不会吧/表情），回复草稿已交 Hai 批准，没发"}, {"time": "2026-11-15 01:50", "status": "完成", "note": "经 Hai 批准，QQ 给「ɵ°」发了 1 条回复，发送成功，对方暂未回复"}, {"time": "2026-11-15 02:06", "status": "完成", "note": "QQ「ɵ°」问「都有什么工作？」，按普通聊天规则直接回复1条（问城市和工作经历，无工资数字承诺），发送成功，对方暂未回复"}, {"time": "2026-11-15 02:07", "status": "开始", "note": "已读总规则更新：QQ普通私信直接回复，涉及工资数字、承诺、法律、纠纷的写草稿交大总管汇总给Hai"}, {"time": "2026-11-15 02:08", "status": "完成", "note": "收到规则补充：QQ普通闲聊寒暄也直接回复，只有工资数字、承诺、法律、纠纷才写草稿交大总管；ɵ°回复已验收"}, {"time": "2026-11-15 02:10", "status": "完成", "note": "建好定时任务「QQ 私信巡检（苏苏爱吃鱼）」，每5分钟检查QQ未读私信，普通的直接回复，敏感的写草稿交大总管"}, {"time": "2026-11-15 02:10", "status": "开始", "note": "按大总管转达的纠正删掉5分钟QQ定时任务，开始只读排查QQ新消息信号"}, {"time": "2026-11-15 02:12", "status": "完成", "note": "按转达停掉QQ新消息信号排查和通知监听；定时任务已删、暂不重建；已回报微信大概率未登录"}, {"time": "2026-11-15 02:12", "status": "开始", "note": "确认核心职责：守QQ和微信私信，每次被叫醒先查未读；定时任务、触发脚本全部不建；微信等Hai扫码"}, {"time": "2026-11-15 02:13", "status": "完成", "note": "建好定时任务「QQ 微信私信巡检」，每5分钟查QQ和微信未读，普通的直接回复，敏感的写草稿交大总管"}, {"time": "2026-11-15 02:17", "status": "等Hai回复", "note": "主动给QQ「ɵ°」发普通消息的草稿已交Hai确认，确认前不发"}, {"time": "2026-11-15 02:17", "status": "完成", "note": "巡检：QQ ɵ° 发来表情和“闲聊”，已直接回复问近况和所在城市；微信未登录，跳过"}, {"time": "2026-11-15 02:20", "status": "完成", "note": "建好网址触发的例行任务「QQ 新消息触发」，处理规则和巡检一样；「QQ 微信私信巡检」保留"}, {"time": "2026-11-15 02:27", "status": "完成", "note": "巡检：QQ ɵ° 回“这么”“干嘛”，已直接回复（随便聊聊、可说说找工作情况）；上一条回复打字丢字已记录"}, {"time": "2026-11-15 02:27", "status": "开始", "note": "连续对话测试满3轮已结束，开始整理ɵ°会话原文、时间和截图给大总管验收"}, {"time": "2026-11-15 02:28", "status": "卡住", "note": "截图核实QQ打字会丢字：02:17和02:27两条回复都缺字（首条也缺「在」），已暂停「QQ 微信私信巡检」，等修好输入方式再开"}, {"time": "2026-11-15 02:32", "status": "完成", "note": "QQ复制粘贴只贴不发测通，文字一字不差；两个QQ任务已改成粘贴发送并核对，巡检已恢复"}, {"time": "2026-11-15 02:58", "status": "完成", "note": "更正私信汇总表第3条：02:27那条是改用粘贴前打字发的，实际丢了字，删掉“已核对原文无误”"}, {"time": "2026-11-15 03:41", "status": "卡住", "note": "QQ（苏苏爱吃鱼）显示连接已断开超过1分钟未恢复，暂时收不到私信，已报大总管和 Hai"}, {"time": "2026-11-15 03:42", "status": "等Hai回复", "note": "QQ仍显示连接已断开，界面没有重连按钮，点横幅也没反应，没出现验证，需要Hai重新登录"}, {"time": "2026-11-15 04:35", "status": "开始", "note": "按大总管转达的 Hai 指示重新登录 QQ，先正常退出再重启，巡检暂停中"}, {"time": "2026-11-15 04:37", "status": "等Hai回复", "note": "QQ 重启后点登录弹出「登录失败：用户身份已失效，请重新登录」，需要 Hai 亲自重新登录（扫码或账密）"}, {"time": "2026-11-15 04:39", "status": "完成", "note": "Hai 已亲自重新登录 QQ 苏苏爱吃鱼，横幅消失；ɵ° 有 2 条未读（预览「手工费」）"}, {"time": "2026-11-15 04:41", "status": "等Hai回复", "note": "ɵ° 问「手工费」，属敏感（钱），回复草稿待 Hai 批准；测试消息按 Hai 批准发送中"}, {"time": "2026-11-15 04:43", "status": "完成", "note": "按 Hai 批准给 ɵ° 发「测试，收到请回复」（04:42 太平洋时间，复制粘贴，发前发后已对字）"}, {"time": "2026-11-15 04:45", "status": "完成", "note": "手工费回复经 Hai 批准 04:44 发给 ɵ°（含一次性道歉，复制粘贴，已对字）；ɵ° 回过「厕所」，等对方回复"}, {"time": "2026-11-15 04:53", "status": "完成", "note": "QQ 回复 ɵ°「回复一下」（04:52 太平洋时间，复制粘贴，发前发后已对字）：手工费需向厂里确认，追问城市/做过的活/年龄；QQ 已连接"}, {"time": "2026-11-15 04:58", "status": "完成", "note": "QQ 回复 ɵ°「给我说说你这都有什么公司」（04:57 太平洋时间，复制粘贴，已对字）：工厂信息表为空，未报厂名，追问城市/做过的活/年龄；QQ 已连接"}, {"time": "2026-11-15 05:05", "status": "完成", "note": "QQ 回复 ɵ°「好的」（05:05 太平洋时间，复制粘贴，已对字）：请对方方便时说城市/做过的活/年龄；QQ 已连接"}], "assignments": [{"priority": "P2", "task": "写私信跟进模板（首次回复、收集信息、邀约报名、未回复二次跟进）", "deliverable": "/home/box/company/草稿/私信模板.md", "standard": "每个场景 1–2 条；不承诺工资/入职；标注【需 Hai 批准】才能发送"}], "counts": {"开始": 10, "完成": 17, "卡住": 4, "等Hai回复": 12}, "acceptance": [{"time": "2026-11-14 23:56", "note": "验收：候选人台账、招聘帖模板、评论回复话术通过；私信话术库缺邀约报名和未回复跟进，退回"}, {"time": "2026-11-15 01:36", "note": "验收通过：私信跟进桌面上 QQ 能正常打开，停在扫码登录页，没登录也没注册｜等 Hai 定 QQ 账号"}, {"time": "2026-11-15 01:51", "note": "验收通过：私信跟进用 QQ 回复「ɵ°」一条（Hai 在私信跟进对话里亲自批准），截图核对原文一致，发送成功，对方暂未回｜等对方回复"}, {"time": "2026-11-15 02:04", "note": "Hai 语音要求私信跟进给 QQ「ɵ°」发一条打招呼消息（普通聊天，按新规则直接发），交原文和截图验收"}, {"time": "2026-11-15 02:07", "note": "验收私信跟进 QQ「ɵ°」回复：截图核对原文一致、已发出、不涉敏感，通过；打招呼那条因对方已在聊未发，合理。岗位表为空，后续问岗位/工资需 Hai 提供真实岗位"}, {"time": "2026-11-15 02:29", "note": "验收连续对话测试：截图核对，3 轮来回都靠巡检完成，但 02:17、02:27 两条及 01:50 打招呼那条均丢字（之前我验收 01:50 那条通过是错的），退回；私信跟进已暂停巡检，改复制粘贴发送后再开"}, {"time": "2026-11-15 02:32", "note": "验收私信跟进复制粘贴发送测试：截图输入框文字完整无丢字，未发出，通过；两个巡检任务已改为粘贴发送，巡检已恢复"}, {"time": "2026-11-15 05:30", "note": "验收引流获客小红书草稿：退回，3 条都是工厂招聘帖，跟 Hai 纠正后的方向（找求职者的帖子）不一致，已让它重新找求职帖写草稿；私信入口和限制已查清"}, {"time": "2026-11-15 05:36", "note": "验收引流获客小红书求职帖评论草稿第二版：通过，第1、2条交 Hai 批，第3条（行政文员）不评；已让引流获客再找 3 条进厂求职帖，并给帖子下的求职者写私信草稿"}]}], "waiting_for_hai": [{"name": "引流获客", "status": "等Hai回复", "note": "湖南、浙江两条评论 Hai 已在其聊天确认，收集完评论者后发送；「大总管批完就算数」需 Hai 在引流获客聊天里亲口说才生效", "time": "2026-11-15 05:52"}, {"name": "候选人跟进", "status": "等Hai回复", "note": "需要 Hai 告知候选人资料来源、面试体检入职流程和台账存放位置", "time": "2026-11-14 23:54"}, {"name": "评论回复", "status": "卡住", "note": "QQ官方deb下载仍返回403（未装过linuxqq），等微信扫码交回后改用浏览器下载再试", "time": "2026-11-15 01:10"}], "log_desc": [{"seq": 184, "time_raw": "2026-11-15 05:52", "time": "2026-11-15 05:52", "name": "引流获客", "status": "等Hai回复", "note": "湖南、浙江两条评论 Hai 已在其聊天确认，收集完评论者后发送；「大总管批完就算数」需 Hai 在引流获客聊天里亲口说才生效"}, {"seq": 183, "time_raw": "2026-11-15 05:51", "time": "2026-11-15 05:51", "name": "引流获客", "status": "开始", "note": "Hai 在我的聊天里回复「发」，确认用 Hai 小红书号发两条已批准评论（倒霉电饭煲帖、多米兔帖），等当前收集评论者的浏览器任务结束后马上发"}, {"seq": 182, "time_raw": "2026-11-15 05:51", "time": "2026-11-15 05:51", "name": "大总管", "status": "开始", "note": "Hai 取消引流获客「发布前须 Hai 在其聊天里亲口确认」：Hai 在大总管处批完即视为批准，可直接发；已转告引流获客，并让它立即发湖南、浙江两条已批评论"}, {"seq": 181, "time_raw": "2026-11-15 05:47", "time": "2026-11-15 05:47", "name": "引流获客", "status": "完成", "note": "建好引流效果跟踪表 /home/box/company/草稿/引流效果跟踪表.csv（目前没有任何已发出记录）"}, {"seq": 180, "time_raw": "2026-11-15 05:47", "time": "2026-11-15 05:47", "name": "大总管", "status": "完成", "note": "Hai 要求引流获客重转化：评论和私信要让求职者主动来公司小红书号或加微信，不是发了就算，Hai 批稿时看转化效果；已转告引流获客，并让它记录每条发出后有没有回复、有没有来"}, {"seq": 179, "time_raw": "2026-11-15 05:47", "time": "2026-11-15 05:47", "name": "大总管", "status": "完成", "note": "Hai 补充：帖子下的招聘者、中介是竞争对手，一律不私信，与「只私信真正在找工作的」合并执行；已转告引流获客"}, {"seq": 178, "time_raw": "2026-11-15 05:46", "time": "2026-11-15 05:46", "name": "大总管", "status": "完成", "note": "Hai 明确：评论者里只私信真正在找工作的，招聘方、中介、发招聘信息的一律不发；已转告引流获客"}, {"seq": 177, "time_raw": "2026-11-15 05:46", "time": "2026-11-15 05:46", "name": "大总管", "status": "完成", "note": "Hai 指示：求职帖下在找工作的评论者每一个都写私信草稿，不漏人，交 Hai 批后再发；已转告引流获客"}, {"seq": 176, "time_raw": "2026-11-15 05:45", "time": "2026-11-15 05:45", "name": "大总管", "status": "完成", "note": "Hai 再次明确：帖子下在找工作的评论者也可私信，写私信草稿交 Hai 批，批了再发；已转告引流获客"}, {"seq": 175, "time_raw": "2026-11-15 05:45", "time": "2026-11-15 05:45", "name": "大总管", "status": "完成", "note": "Hai 强调同一帖子下不能发两条评论：湖南日结帖、浙江求职帖各发各的那一条，不重复；已转告引流获客"}, {"seq": 174, "time_raw": "2026-11-15 05:45", "time": "2026-11-15 05:45", "name": "大总管", "status": "开始", "note": "Hai 再次批准湖南日结和浙江两条小红书评论都发；已转告引流获客立即发送，发完回报结果和截图"}, {"seq": 173, "time_raw": "2026-11-15 05:38", "time": "2026-11-15 05:38", "name": "大总管", "status": "完成", "note": "Hai 指示引流获客把合适求职帖下的评论全部看完，在找工作的都写私信草稿，不漏，每条先交 Hai 批；已转告"}, {"seq": 172, "time_raw": "2026-11-15 05:37", "time": "2026-11-15 05:37", "name": "大总管", "status": "完成", "note": "Hai 指示引流获客优先找广东求职者，重点东莞、广州、佛山，搜索加地区关键词；在找工作的人都写私信草稿，每条先交 Hai 批；已转告"}, {"seq": 171, "time_raw": "2026-11-15 05:37", "time": "2026-11-15 05:37", "name": "大总管", "status": "开始", "note": "Hai 批准小红书求职帖评论第1条（湖南日结）和第2条（浙江），第3条成都文员帖不评；已转告引流获客发前核对原文，只发这两条"}, {"seq": 170, "time_raw": "2026-11-15 05:37", "time": "2026-11-15 05:37", "name": "大总管", "status": "完成", "note": "Hai 再次纠正筛选标准：去掉「想进厂做普工」，只要在找工作的人都私信，来者不拒；已转告引流获客，私信草稿仍先交 Hai 批"}, {"seq": 169, "time_raw": "2026-11-15 05:36", "time": "2026-11-15 05:36", "name": "大总管", "status": "等Hai回复", "note": "验收引流获客小红书求职帖评论草稿第二版：通过，第1、2条交 Hai 批，第3条（行政文员）不评；已让引流获客再找 3 条进厂求职帖，并给帖子下的求职者写私信草稿"}, {"seq": 168, "time_raw": "2026-11-15 05:36", "time": "2026-11-15 05:36", "name": "引流获客", "status": "等Hai回复", "note": "小红书求职帖 3 条和评论草稿已写好：/home/box/company/草稿/小红书求职帖评论草稿.md，交大总管汇总，未发任何评论"}, {"seq": 167, "time_raw": "2026-11-15 05:36", "time": "2026-11-15 05:36", "name": "大总管", "status": "开始", "note": "Hai 扩大引流范围：求职帖下面评论的求职者也是目标，可以私信；已转告引流获客把这些人列进私信名单并写私信草稿，短、像真人、戳痛点，每条先交 Hai 批"}, {"seq": 166, "time_raw": "2026-11-15 05:35", "time": "2026-11-15 05:35", "name": "大总管", "status": "开始", "note": "Hai 问引流获客找求职帖的筛选标准；已报已定部分（关键词、只看求职者自己发的帖、跳过招聘帖），时间、地区、互动量未定，已问引流获客实际在用的"}, {"seq": 165, "time_raw": "2026-11-15 05:34", "time": "2026-11-15 05:34", "name": "大总管", "status": "完成", "note": "Hai 要求评论话术要短、像真人随手打的，不能像作文；已转告引流获客重写时照做，每条仍先交 Hai 批"}, {"seq": 164, "time_raw": "2026-11-15 05:34", "time": "2026-11-15 05:34", "name": "大总管", "status": "开始", "note": "Hai 问为什么看不到引流获客发的评论；查日志和草稿，没有任何发布记录，已让引流获客如实确认有没有发过"}, {"seq": 163, "time_raw": "2026-11-15 05:33", "time": "2026-11-15 05:33", "name": "大总管", "status": "完成", "note": "Hai 放宽找人范围：只要愿意进厂的求职者都要，不挑急不急、有没有欠款；已转告引流获客，评论草稿仍先交 Hai 批"}, {"seq": 162, "time_raw": "2026-11-15 05:33", "time": "2026-11-15 05:33", "name": "大总管", "status": "完成", "note": "Hai 简化找人标准：只找准备找工作的人，不再加欠款、紧迫等条件；已转告引流获客，评论草稿仍先交 Hai 批"}, {"seq": 161, "time_raw": "2026-11-15 05:33", "time": "2026-11-15 05:33", "name": "大总管", "status": "开始", "note": "Hai 要求求职帖评论更精准：优先找急着找工作的人（如有欠款、着急上班），话术对准这类人的痛点；已转告引流获客，并要求不承诺、不借贷、不施压"}, {"seq": 160, "time_raw": "2026-11-15 05:32", "time": "2026-11-15 05:32", "name": "大总管", "status": "完成", "note": "Hai 回复：公司小红书号就用他刚登录的个人号；总规则第七条不改，评论把人引到小红书号，再由私信跟进转到微信。已转告引流获客"}, {"seq": 159, "time_raw": "2026-11-15 05:31", "time": "2026-11-15 05:31", "name": "大总管", "status": "开始", "note": "Hai 补充引流评论要求：评论把求职者引到公司小红书号，不直接写微信号；话术像真人、精准不生硬；戳中求职者痛点。已转告引流获客按此重写小红书草稿，每条交 Hai 批"}, {"seq": 158, "time_raw": "2026-11-15 05:30", "time": "2026-11-15 05:30", "name": "大总管", "status": "完成", "note": "按 Hai 指示删掉总规则第七条里所有找工厂招聘帖的内容，只保留找求职者帖子引流"}, {"seq": 157, "time_raw": "2026-11-15 05:30", "time": "2026-11-15 05:30", "name": "大总管", "status": "完成", "note": "验收引流获客小红书草稿：退回，3 条都是工厂招聘帖，跟 Hai 纠正后的方向（找求职者的帖子）不一致，已让它重新找求职帖写草稿；私信入口和限制已查清"}, {"seq": 156, "time_raw": "2026-11-15 05:30", "time": "2026-11-15 05:30", "name": "引流获客", "status": "开始", "note": "方向改为在小红书找求职者自己发的帖子（求职/找工作/普工求职），写引导加微信的评论草稿，不发"}, {"seq": 155, "time_raw": "2026-11-15 05:30", "time": "2026-11-15 05:30", "name": "引流获客", "status": "等Hai回复", "note": "小红书 3 条招聘帖和评论草稿已写好：/home/box/company/草稿/小红书引流评论草稿.md，已交大总管汇总，未发任何评论或私信"}, {"seq": 154, "time_raw": "2026-11-15 05:29", "time": "2026-11-15 05:29", "name": "大总管", "status": "开始", "note": "Hai 纠正方向：引流评论要找求职者发的帖子（求职、找工作、普工求职），不是工厂招聘帖、也不联系公司；已改总规则第七条并转告引流获客重新做，评论草稿不报数字不做承诺，全部交 Hai 批"}, {"seq": 153, "time_raw": "2026-11-15 05:26", "time": "2026-11-15 05:26", "name": "引流获客", "status": "等Hai回复", "note": "小红书在引流获客浏览器里仍未登录，等 Hai 点新的登录确认链接再扫码；除登录页外都会跳到国际版 rednote，建议打开流量经过本机"}, {"seq": 152, "time_raw": "2026-11-15 05:23", "time": "2026-11-15 05:23", "name": "大总管", "status": "开始", "note": "Hai 已用个人号登录国内版小红书；已转告引流获客继续找工厂招聘帖，每条配一句引导加微信的评论草稿（不报数字不做承诺），查私信入口和限制，评论一条不发、全部交 Hai 批"}, {"seq": 151, "time_raw": "2026-11-15 05:21", "time": "2026-11-15 05:21", "name": "大总管", "status": "开始", "note": "Hai 说小红书登录页疑似国际版，已让引流获客查网址，是国际版就改开国内版 xiaohongshu.com 中文扫码登录页"}, {"seq": 150, "time_raw": "2026-11-15 05:18", "time": "2026-11-15 05:18", "name": "大总管", "status": "开始", "note": "Hai 指示：三个平台先做小红书，抖音快手排后面；已转告引流获客只开小红书登录页，等 Hai 用个人号登录，登上后找帖子写评论草稿、查私信功能，评论逐条交 Hai 批"}, {"seq": 149, "time_raw": "2026-11-15 05:11", "time": "2026-11-15 05:11", "name": "大总管", "status": "开始", "note": "Hai 更正：不用公司账号，改用 Hai 个人账号登录小红书、抖音、快手做引流评论；已转告引流获客请 Hai 在它聊天里自己扫码或输密码，登录后找帖子写评论草稿、查私信功能，评论逐条交 Hai 批"}, {"seq": 148, "time_raw": "2026-11-15 05:11", "time": "2026-11-15 05:11", "name": "引流获客", "status": "完成", "note": "按大总管转达，引流评论任务暂停，不登录三个平台，已关闭小红书/抖音/快手页面，等下一步安排"}, {"seq": 147, "time_raw": "2026-11-15 05:11", "time": "2026-11-15 05:11", "name": "大总管", "status": "完成", "note": "Hai 决定：不用公司账号登录小红书、抖音、快手，引流评论任务暂停，不扫码不输密码；已转告引流获客"}, {"seq": 146, "time_raw": "2026-11-15 05:10", "time": "2026-11-15 05:10", "name": "大总管", "status": "等Hai回复", "note": "引流获客试做引流评论卡住：小红书加载报错，抖音不登录搜不了，快手搜不到结果且评论要登录；需 Hai 定是否用公司账号登录并亲自扫码"}, {"seq": 145, "time_raw": "2026-11-15 05:10", "time": "2026-11-15 05:10", "name": "引流获客", "status": "卡住", "note": "三平台不登录看不到招聘帖：小红书页面加载失败，抖音搜索弹登录框，快手搜索结果空白；未登录未注册未发任何内容，已报大总管"}, {"seq": 144, "time_raw": "2026-11-15 05:08", "time": "2026-11-15 05:08", "name": "引流获客", "status": "开始", "note": "按大总管派活，在小红书/抖音/快手找工厂招聘帖、写引流评论草稿并核查私信功能（不发评论不发私信）"}, {"seq": 143, "time_raw": "2026-11-15 05:08", "time": "2026-11-15 05:08", "name": "大总管", "status": "开始", "note": "Hai 指示：引流获客在小红书、抖音、快手的招聘帖下试做引流评论，并看各平台私信能不能用；已派活，评论草稿逐条交 Hai 批，评论和私信都不发、不注册账号"}, {"seq": 142, "time_raw": "2026-11-15 05:06", "time": "2026-11-15 05:06", "name": "大总管", "status": "完成", "note": "Hai 定稿：引流评论平台只限小红书、抖音、快手（微信不加），负责人引流获客；流程是引流获客发评论（每条先交草稿批）、求职者加公司微信、私信跟进接手；已写进总规则第七条"}, {"seq": 141, "time_raw": "2026-11-15 05:05", "time": "2026-11-15 05:05", "name": "大总管", "status": "完成", "note": "Hai 再次明确：要一人专门做引流，在抖音、微信、小红书等平台的工厂招聘帖下评论，把求职者引来加公司微信；已在总规则加第七条，平台范围写为抖音、快手、小红书，负责人待 Hai 确认"}, {"seq": 140, "time_raw": "2026-11-15 05:05", "time": "2026-11-15 05:05", "name": "私信跟进", "status": "完成", "note": "QQ 回复 ɵ°「好的」（05:05 太平洋时间，复制粘贴，已对字）：请对方方便时说城市/做过的活/年龄；QQ 已连接"}, {"seq": 139, "time_raw": "2026-11-15 05:00", "time": "2026-11-15 05:00", "name": "引流获客", "status": "完成", "note": "无真人出镜招工短视频素材调研与三套方案已写入 /home/box/company/草稿/短视频素材与方案.md"}, {"seq": 138, "time_raw": "2026-11-15 04:58", "time": "2026-11-15 04:58", "name": "大总管", "status": "等Hai回复", "note": "ɵ° 已追问手工费和有哪些厂，岗位表和工厂信息表仍空，私信跟进只能追问基本情况；需 Hai 提供真实在招岗位交工厂对接录入"}, {"seq": 137, "time_raw": "2026-11-15 04:58", "time": "2026-11-15 04:58", "name": "私信跟进", "status": "完成", "note": "QQ 回复 ɵ°「给我说说你这都有什么公司」（04:57 太平洋时间，复制粘贴，已对字）：工厂信息表为空，未报厂名，追问城市/做过的活/年龄；QQ 已连接"}, {"seq": 136, "time_raw": "2026-11-15 04:56", "time": "2026-11-15 04:56", "name": "引流获客", "status": "开始", "note": "调研无真人出镜招工短视频素材来源、费用与三套方案，完成后写入草稿/短视频素材与方案.md"}, {"seq": 135, "time_raw": "2026-11-15 04:55", "time": "2026-11-15 04:55", "name": "引流获客", "status": "开始", "note": "按 Hai 语音要求研究短视频素材来源、AI 视频工具，设计 3 套无真人出镜招工视频方案"}, {"seq": 134, "time_raw": "2026-11-15 04:53", "time": "2026-11-15 04:53", "name": "私信跟进", "status": "完成", "note": "QQ 回复 ɵ°「回复一下」（04:52 太平洋时间，复制粘贴，发前发后已对字）：手工费需向厂里确认，追问城市/做过的活/年龄；QQ 已连接"}, {"seq": 133, "time_raw": "2026-11-15 04:45", "time": "2026-11-15 04:45", "name": "私信跟进", "status": "完成", "note": "手工费回复经 Hai 批准 04:44 发给 ɵ°（含一次性道歉，复制粘贴，已对字）；ɵ° 回过「厕所」，等对方回复"}, {"seq": 132, "time_raw": "2026-11-15 04:43", "time": "2026-11-15 04:43", "name": "私信跟进", "status": "完成", "note": "按 Hai 批准给 ɵ° 发「测试，收到请回复」（04:42 太平洋时间，复制粘贴，发前发后已对字）"}, {"seq": 131, "time_raw": "2026-11-15 04:41", "time": "2026-11-15 04:41", "name": "私信跟进", "status": "等Hai回复", "note": "ɵ° 问「手工费」，属敏感（钱），回复草稿待 Hai 批准；测试消息按 Hai 批准发送中"}, {"seq": 130, "time_raw": "2026-11-15 04:39", "time": "2026-11-15 04:39", "name": "私信跟进", "status": "完成", "note": "Hai 已亲自重新登录 QQ 苏苏爱吃鱼，横幅消失；ɵ° 有 2 条未读（预览「手工费」）"}, {"seq": 129, "time_raw": "2026-11-15 04:39", "time": "2026-11-15 04:39", "name": "大总管", "status": "开始", "note": "Hai 说 QQ 已登上，转告私信跟进给 ɵ° 发「测试，收到请回复」并持续来回聊天，每轮记原文、时间、连接状态，不回或断开就停下报告"}, {"seq": 128, "time_raw": "2026-11-15 04:38", "time": "2026-11-15 04:38", "name": "大总管", "status": "等Hai回复", "note": "QQ 重启后登录苏苏爱吃鱼失败，提示「你的用户身份已失效…请你重新登录」，需 Hai 亲自扫码或账密登录；测试消息 Hai 已让先别发"}, {"seq": 127, "time_raw": "2026-11-15 04:37", "time": "2026-11-15 04:37", "name": "私信跟进", "status": "等Hai回复", "note": "QQ 重启后点登录弹出「登录失败：用户身份已失效，请重新登录」，需要 Hai 亲自重新登录（扫码或账密）"}, {"seq": 126, "time_raw": "2026-11-15 04:35", "time": "2026-11-15 04:35", "name": "私信跟进", "status": "开始", "note": "按大总管转达的 Hai 指示重新登录 QQ，先正常退出再重启，巡检暂停中"}, {"seq": 125, "time_raw": "2026-11-15 04:35", "time": "2026-11-15 04:35", "name": "大总管", "status": "开始", "note": "按 Hai 语音要求，派私信跟进重新登录 QQ 苏苏爱吃鱼，登上后给 ɵ° 发「测试，收到请回复」并回报"}, {"seq": 124, "time_raw": "2026-11-15 03:42", "time": "2026-11-15 03:42", "name": "私信跟进", "status": "等Hai回复", "note": "QQ仍显示连接已断开，界面没有重连按钮，点横幅也没反应，没出现验证，需要Hai重新登录"}, {"seq": 123, "time_raw": "2026-11-15 03:41", "time": "2026-11-15 03:41", "name": "大总管", "status": "等Hai回复", "note": "私信跟进报 QQ 苏苏爱吃鱼 03:39 起显示连接已断开，未自动恢复，掉线期间收不到私信；已让私信跟进试一下普通重连，要扫码或验证就停下等 Hai"}, {"seq": 122, "time_raw": "2026-11-15 03:41", "time": "2026-11-15 03:41", "name": "私信跟进", "status": "卡住", "note": "QQ（苏苏爱吃鱼）显示连接已断开超过1分钟未恢复，暂时收不到私信，已报大总管和 Hai"}, {"seq": 121, "time_raw": "2026-11-15 03:00", "time": "2026-11-15 03:00", "name": "大总管", "status": "卡住", "note": "按 Hai 要求在共享电脑上找 QQ 新消息触发的 Webhook URL：配置目录、环境变量、agent-data 都搜过，没有网址原文；App 在 Hai 自己电脑上，不在这台"}, {"seq": 120, "time_raw": "2026-11-15 02:59", "time": "2026-11-15 02:59", "name": "大总管", "status": "卡住", "note": "QQ 新消息触发的面板和直达链接都不显示 Webhook URL 原文，请求头 Authorization 和密钥已齐，只缺网址；替 Hai 报开发团队时因隐私模式失败，需 Hai 自己从帮助菜单反馈或发邮件给 support@x.ai"}, {"seq": 119, "time_raw": "2026-11-15 02:58", "time": "2026-11-15 02:58", "name": "私信跟进", "status": "完成", "note": "更正私信汇总表第3条：02:27那条是改用粘贴前打字发的，实际丢了字，删掉“已核对原文无误”"}, {"seq": 118, "time_raw": "2026-11-15 02:56", "time": "2026-11-15 02:56", "name": "大总管", "status": "开始", "note": "Hai 要求优先跑通 QQ 脚本，暂缓任务分配清单"}, {"seq": 117, "time_raw": "2026-11-15 02:33", "time": "2026-11-15 02:33", "name": "大总管", "status": "等Hai回复", "note": "QQ 触发脚本已部署常驻并核实在跑（脚本135190/守护135033/watchdog135026），等 Hai 给触发网址和密钥后填配置才会真正触发"}, {"seq": 116, "time_raw": "2026-11-15 02:33", "time": "2026-11-15 02:33", "name": "大总管", "status": "完成", "note": "QQ 新消息触发脚本已部署并自测通过：inotify 监听 nt_msg.db/wal，防抖10秒、间隔60秒；本机无 systemd/cron，用 setsid 重启循环加30秒检查守护；webhook 待配置；正式进程 135190"}, {"seq": 115, "time_raw": "2026-11-15 02:33", "time": "2026-11-15 02:33", "name": "大总管", "status": "完成", "note": "Hai 已知自动回复可能违反 QQ 用户协议第8.2.3条（非人工方式发信息）、有封号风险，仍决定继续自动回复 QQ 私信；总规则不改，已转告私信跟进"}, {"seq": 114, "time_raw": "2026-11-15 02:32", "time": "2026-11-15 02:32", "name": "大总管", "status": "完成", "note": "验收私信跟进复制粘贴发送测试：截图输入框文字完整无丢字，未发出，通过；两个巡检任务已改为粘贴发送，巡检已恢复"}, {"seq": 113, "time_raw": "2026-11-15 02:32", "time": "2026-11-15 02:32", "name": "私信跟进", "status": "完成", "note": "QQ复制粘贴只贴不发测通，文字一字不差；两个QQ任务已改成粘贴发送并核对，巡检已恢复"}, {"seq": 112, "time_raw": "2026-11-15 02:29", "time": "2026-11-15 02:29", "name": "大总管", "status": "完成", "note": "验收连续对话测试：截图核对，3 轮来回都靠巡检完成，但 02:17、02:27 两条及 01:50 打招呼那条均丢字（之前我验收 01:50 那条通过是错的），退回；私信跟进已暂停巡检，改复制粘贴发送后再开"}, {"seq": 111, "time_raw": "2026-11-15 02:29", "time": "2026-11-15 02:29", "name": "大总管", "status": "开始", "note": "Hai 语音要求马上做触发脚本：以 QQ 消息库文件 nt_msg.db 变化为触发条件，防抖后调用「QQ 新消息触发」网址，后台常驻；密钥待 Hai 提供，五分钟巡检保留兜底"}, {"seq": 110, "time_raw": "2026-11-15 02:28", "time": "2026-11-15 02:28", "name": "私信跟进", "status": "卡住", "note": "截图核实QQ打字会丢字：02:17和02:27两条回复都缺字（首条也缺「在」），已暂停「QQ 微信私信巡检」，等修好输入方式再开"}, {"seq": 109, "time_raw": "2026-11-15 02:27", "time": "2026-11-15 02:27", "name": "私信跟进", "status": "开始", "note": "连续对话测试满3轮已结束，开始整理ɵ°会话原文、时间和截图给大总管验收"}, {"seq": 108, "time_raw": "2026-11-15 02:27", "time": "2026-11-15 02:27", "name": "私信跟进", "status": "完成", "note": "巡检：QQ ɵ° 回“这么”“干嘛”，已直接回复（随便聊聊、可说说找工作情况）；上一条回复打字丢字已记录"}, {"seq": 107, "time_raw": "2026-11-15 02:20", "time": "2026-11-15 02:20", "name": "大总管", "status": "完成", "note": "私信跟进已建 webhook 例行任务「QQ 新消息触发」，巡检保留；触发网址和密钥需 Hai 从任务面板复制，等 QQ 信号排查结果后一起找 Hai"}, {"seq": 106, "time_raw": "2026-11-15 02:20", "time": "2026-11-15 02:20", "name": "私信跟进", "status": "完成", "note": "建好网址触发的例行任务「QQ 新消息触发」，处理规则和巡检一样；「QQ 微信私信巡检」保留"}, {"seq": 105, "time_raw": "2026-11-15 02:20", "time": "2026-11-15 02:20", "name": "大总管", "status": "开始", "note": "Hai 语音要求重做脚本方案：排查 QQ 新消息可被脚本抓到的信号；让私信跟进建 webhook 例行任务「QQ 新消息触发」；5 分钟巡检暂留作备用"}, {"seq": 104, "time_raw": "2026-11-15 02:18", "time": "2026-11-15 02:18", "name": "大总管", "status": "完成", "note": "查连续对话延迟：第二轮 ɵ° 约 02:07 来消息（私信跟进报的，无截图核对），02:17 巡检才回，约 10 分钟；当时巡检任务 02:12 已删、02:13 才重建，是等巡检；QQ 进程正常、占用低"}, {"seq": 103, "time_raw": "2026-11-15 02:17", "time": "2026-11-15 02:17", "name": "私信跟进", "status": "完成", "note": "巡检：QQ ɵ° 发来表情和“闲聊”，已直接回复问近况和所在城市；微信未登录，跳过"}, {"seq": 102, "time_raw": "2026-11-15 02:17", "time": "2026-11-15 02:17", "name": "私信跟进", "status": "等Hai回复", "note": "主动给QQ「ɵ°」发普通消息的草稿已交Hai确认，确认前不发"}, {"seq": 101, "time_raw": "2026-11-15 02:17", "time": "2026-11-15 02:17", "name": "大总管", "status": "完成", "note": "按 Hai 语音在总规则第一条加：私信跟进主动发的普通消息（不提工资或数字、不承诺、不涉法律纠纷）也直接发，不用问 Hai；已转告私信跟进马上执行"}, {"seq": 100, "time_raw": "2026-11-15 02:15", "time": "2026-11-15 02:15", "name": "大总管", "status": "开始", "note": "私信跟进定时任务「QQ 微信私信巡检」已建（每 5 分钟）；Hai 语音要求测试连续对话：私信跟进主动给 ɵ° 发一条，靠巡检多轮来回，满 3 轮或 30 分钟没回或遇敏感即结束，交记录和截图"}, {"seq": 99, "time_raw": "2026-11-15 02:13", "time": "2026-11-15 02:13", "name": "私信跟进", "status": "完成", "note": "建好定时任务「QQ 微信私信巡检」，每5分钟查QQ和微信未读，普通的直接回复，敏感的写草稿交大总管"}, {"seq": 98, "time_raw": "2026-11-15 02:13", "time": "2026-11-15 02:13", "name": "大总管", "status": "开始", "note": "Hai 语音定：私信跟进建每 5 分钟定时任务检查 QQ 苏苏爱吃鱼和微信未读，不敏感直接回、敏感交草稿；已通知，等私信跟进回报建好"}, {"seq": 97, "time_raw": "2026-11-15 02:12", "time": "2026-11-15 02:12", "name": "私信跟进", "status": "开始", "note": "确认核心职责：守QQ和微信私信，每次被叫醒先查未读；定时任务、触发脚本全部不建；微信等Hai扫码"}, {"seq": 96, "time_raw": "2026-11-15 02:12", "time": "2026-11-15 02:12", "name": "大总管", "status": "完成", "note": "Hai 语音定：私信跟进核心职责是守 QQ（苏苏爱吃鱼）和微信私信，不敏感直接回、敏感交草稿；定时任务、触发脚本、网址密钥全部取消（已确认删除）；已转告私信跟进"}, {"seq": 95, "time_raw": "2026-11-15 02:12", "time": "2026-11-15 02:12", "name": "私信跟进", "status": "完成", "note": "按转达停掉QQ新消息信号排查和通知监听；定时任务已删、暂不重建；已回报微信大概率未登录"}, {"seq": 94, "time_raw": "2026-11-15 02:11", "time": "2026-11-15 02:11", "name": "大总管", "status": "等Hai回复", "note": "Hai 语音取消触发式方案（不用网址、密钥、脚本），要私信跟进直接盯 QQ 和微信；已让私信跟进停掉脚本方案、保留定时任务，等 Hai 定检查频率"}, {"seq": 93, "time_raw": "2026-11-15 02:10", "time": "2026-11-15 02:10", "name": "私信跟进", "status": "开始", "note": "按大总管转达的纠正删掉5分钟QQ定时任务，开始只读排查QQ新消息信号"}, {"seq": 92, "time_raw": "2026-11-15 02:10", "time": "2026-11-15 02:10", "name": "大总管", "status": "开始", "note": "Hai 语音纠正：不用 5 分钟轮询，改为 QQ 来消息即触发；已让私信跟进删掉定时任务，并先查 QQ 新消息能否被脚本发现（桌面通知等），再用 webhook 例行任务唤醒"}, {"seq": 91, "time_raw": "2026-11-15 02:10", "time": "2026-11-15 02:10", "name": "私信跟进", "status": "完成", "note": "建好定时任务「QQ 私信巡检（苏苏爱吃鱼）」，每5分钟检查QQ未读私信，普通的直接回复，敏感的写草稿交大总管"}, {"seq": 90, "time_raw": "2026-11-15 02:09", "time": "2026-11-15 02:09", "name": "大总管", "status": "开始", "note": "Hai 语音同意：让私信跟进自建每 5 分钟检查 QQ 苏苏爱吃鱼未读私信的定时任务，不敏感直接回，敏感交草稿；等私信跟进回报建好"}, {"seq": 89, "time_raw": "2026-11-15 02:09", "time": "2026-11-15 02:09", "name": "大总管", "status": "完成", "note": "查 QQ 回复慢：日志显示 01:51 到 02:04 之间私信跟进没有查看 QQ 的记录，02:04 收到指令后 02:05 回复；本次无等批准、等桌面；QQ 进程正常运行，CPU 和内存占用低"}, {"seq": 88, "time_raw": "2026-11-15 02:08", "time": "2026-11-15 02:08", "name": "私信跟进", "status": "完成", "note": "收到规则补充：QQ普通闲聊寒暄也直接回复，只有工资数字、承诺、法律、纠纷才写草稿交大总管；ɵ°回复已验收"}, {"seq": 87, "time_raw": "2026-11-15 02:07", "time": "2026-11-15 02:07", "name": "大总管", "status": "完成", "note": "按 Hai 语音补充总规则：QQ 苏苏爱吃鱼的普通闲聊、寒暄也可直接回复，不限工作话题；只有提工资、做承诺、涉法律、涉纠纷才交草稿给 Hai；已转告私信跟进"}, {"seq": 86, "time_raw": "2026-11-15 02:07", "time": "2026-11-15 02:07", "name": "私信跟进", "status": "开始", "note": "已读总规则更新：QQ普通私信直接回复，涉及工资数字、承诺、法律、纠纷的写草稿交大总管汇总给Hai"}, {"seq": 85, "time_raw": "2026-11-15 02:07", "time": "2026-11-15 02:07", "name": "大总管", "status": "完成", "note": "验收私信跟进 QQ「ɵ°」回复：截图核对原文一致、已发出、不涉敏感，通过；打招呼那条因对方已在聊未发，合理。岗位表为空，后续问岗位/工资需 Hai 提供真实岗位"}, {"seq": 84, "time_raw": "2026-11-15 02:06", "time": "2026-11-15 02:06", "name": "大总管", "status": "完成", "note": "按 Hai 语音要求改总规则：私信跟进 QQ（苏苏爱吃鱼）收到私信，不涉敏感（提工资或数字、做承诺、涉法律、涉纠纷）就直接自动回复，不再弹批准、不问 Hai；已转告私信跟进"}, {"seq": 83, "time_raw": "2026-11-15 02:06", "time": "2026-11-15 02:06", "name": "私信跟进", "status": "完成", "note": "QQ「ɵ°」问「都有什么工作？」，按普通聊天规则直接回复1条（问城市和工作经历，无工资数字承诺），发送成功，对方暂未回复"}, {"seq": 82, "time_raw": "2026-11-15 02:04", "time": "2026-11-15 02:04", "name": "大总管", "status": "开始", "note": "Hai 语音要求私信跟进给 QQ「ɵ°」发一条打招呼消息（普通聊天，按新规则直接发），交原文和截图验收"}, {"seq": 81, "time_raw": "2026-11-15 02:02", "time": "2026-11-15 02:02", "name": "大总管", "status": "完成", "note": "搜到 Grok Bot 自动审核官方文档，已发给 Hai，并按官方说明更新 自动审核教程.md"}, {"seq": 80, "time_raw": "2026-11-15 02:01", "time": "2026-11-15 02:01", "name": "大总管", "status": "完成", "note": "按 Hai 要求写好 /home/box/company/自动审核教程.md"}, {"seq": 79, "time_raw": "2026-11-15 01:51", "time": "2026-11-15 01:51", "name": "大总管", "status": "完成", "note": "按 Hai 语音确认修改总规则：第一条新增「普通聊天直接回复」，第二条「发消息」改为敏感或重要的才需批准；原文件已备份"}, {"seq": 78, "time_raw": "2026-11-15 01:51", "time": "2026-11-15 01:51", "name": "大总管", "status": "完成", "note": "验收通过：私信跟进用 QQ 回复「ɵ°」一条（Hai 在私信跟进对话里亲自批准），截图核对原文一致，发送成功，对方暂未回｜等对方回复"}, {"seq": 77, "time_raw": "2026-11-15 01:51", "time": "2026-11-15 01:51", "name": "大总管", "status": "完成", "note": "Hai 语音定新规则（立即生效）：私信跟进遇到普通聊天，只要不涉及敏感内容（不报工资、不涉及数字、不做承诺、不涉及法律或纠纷），可以直接回复，不用交草稿、不用等批准；重要或敏感的事仍然汇总给 Hai。已转告私信跟进｜无"}, {"seq": 76, "time_raw": "2026-11-15 01:50", "time": "2026-11-15 01:50", "name": "私信跟进", "status": "完成", "note": "经 Hai 批准，QQ 给「ɵ°」发了 1 条回复，发送成功，对方暂未回复"}, {"seq": 75, "time_raw": "2026-11-15 01:49", "time": "2026-11-15 01:49", "name": "私信跟进", "status": "等Hai回复", "note": "桌面能操作了，读完 QQ「ɵ°」4 条消息（你是？/你是/不会吧/表情），回复草稿已交 Hai 批准，没发"}, {"seq": 74, "time_raw": "2026-11-15 01:46", "time": "2026-11-15 01:46", "name": "大总管", "status": "等Hai回复", "note": "Hai 语音亲口批准私信跟进直接回复 QQ「ɵ°」一条，已原话转达；等 Hai 交还桌面，私信跟进可能要求 Hai 在其对话里亲口确认｜等交还桌面"}, {"seq": 73, "time_raw": "2026-11-15 01:45", "time": "2026-11-15 01:45", "name": "大总管", "status": "开始", "note": "Hai 语音批准测试：私信跟进用 QQ 直接回复正在聊天的「ɵ°」一条（不报数字、不承诺），交回原文和截图｜等私信跟进"}, {"seq": 72, "time_raw": "2026-11-15 01:45", "time": "2026-11-15 01:45", "name": "私信跟进", "status": "等Hai回复", "note": "QQ 已登录（昵称 苏苏爱吃鱼），列表里有 1 个会话「ɵ°」2 条未读，预览只显示「你是」；桌面还在 Hai 手里，等他交还后再打开看，不发消息"}, {"seq": 71, "time_raw": "2026-11-15 01:44", "time": "2026-11-15 01:44", "name": "大总管", "status": "开始", "note": "私信跟进 QQ 已扫码登录；Hai 要做私信演示，候选人台账为空，已安排私信跟进只查看 QQ 里有没有真实咨询，并写开场私信草稿，交 Hai 批准后才发｜等私信跟进"}, {"seq": 70, "time_raw": "2026-11-15 01:36", "time": "2026-11-15 01:36", "name": "大总管", "status": "完成", "note": "验收通过：私信跟进桌面上 QQ 能正常打开，停在扫码登录页，没登录也没注册｜等 Hai 定 QQ 账号"}, {"seq": 69, "time_raw": "2026-11-15 01:36", "time": "2026-11-15 01:36", "name": "私信跟进", "status": "等Hai回复", "note": "QQ 3.2.35 已在我桌面打开，停在「手机QQ扫码登录」页，没登录没注册，等 Hai 定用哪个账号"}, {"seq": 68, "time_raw": "2026-11-15 01:35", "time": "2026-11-15 01:35", "name": "大总管", "status": "完成", "note": "从 Hai 的 Google Drive 链接下载 QQ Linux deb 并安装成功（包内实际版本 3.2.35-54395，不是 3.2.33）；直接启动会因 GPU 报错退出，加参数 /opt/QQ/qq --disable-gpu --disable-software-rasterizer --no-sandbox 可正常打开 QQ 窗口；未登录未注册，安装包已删除｜通知私信跟进、评论回复"}, {"seq": 67, "time_raw": "2026-11-15 01:33", "time": "2026-11-15 01:33", "name": "大总管", "status": "卡住", "note": "Google Drive 链接下载跳转到登录页（文件未公开分享），请 Hai 改为“知道链接的任何人”｜等Hai"}, {"seq": 66, "time_raw": "2026-11-15 01:17", "time": "2026-11-15 01:17", "name": "大总管", "status": "完成", "note": "回答 Hai 关于 Google Drive 分享链接隐私的问题：无需登录，只能拿到该文件，本机会留文件和链接记录，出口代理日志无法确认｜等链接"}, {"seq": 65, "time_raw": "2026-11-15 01:13", "time": "2026-11-15 01:13", "name": "大总管", "status": "等Hai回复", "note": "QQ deb 太大聊天发不上；实测本机能访问 Google Drive、Dropbox（OneDrive 返回 403），建议 Hai 用公开分享链接发来｜等链接"}, {"seq": 64, "time_raw": "2026-11-15 01:12", "time": "2026-11-15 01:12", "name": "私信跟进", "status": "等Hai回复", "note": "已停掉浏览器下载 QQ，等 Hai 下好 deb 安装包后再装（不登录、不注册）"}, {"seq": 63, "time_raw": "2026-11-15 01:12", "time": "2026-11-15 01:12", "name": "大总管", "status": "等Hai回复", "note": "私信跟进报告：电脑上微信已经是未登录状态（停在扫码页），建议 Hai 在手机上退出 Linux 微信确认；已让私信跟进停止重试 QQ，等 Hai 发 deb｜等Hai"}, {"seq": 62, "time_raw": "2026-11-15 01:11", "time": "2026-11-15 01:11", "name": "私信跟进", "status": "开始", "note": "微信已关掉重开，停在扫码页（显示 Network disconnected / Scan again），没进会话列表；开始用浏览器重新下载官方 Linux QQ"}, {"seq": 61, "time_raw": "2026-11-15 01:11", "time": "2026-11-15 01:11", "name": "大总管", "status": "等Hai回复", "note": "评论回复报告 QQ deb 仍是 403，dpkg 显示未安装；Hai 决定自己下载 deb 发到聊天，已把官网页面和 deb 地址发给 Hai｜等安装包"}, {"seq": 60, "time_raw": "2026-11-15 01:10", "time": "2026-11-15 01:10", "name": "评论回复", "status": "卡住", "note": "QQ官方deb下载仍返回403（未装过linuxqq），等微信扫码交回后改用浏览器下载再试"}, {"seq": 59, "time_raw": "2026-11-15 01:09", "time": "2026-11-15 01:09", "name": "评论回复", "status": "开始", "note": "重新从QQ官网下载Linux版deb"}, {"seq": 58, "time_raw": "2026-11-15 01:09", "time": "2026-11-15 01:09", "name": "大总管", "status": "开始", "note": "Egress 已设为允许所有，通知两位员工重试 QQ Linux 版下载｜等员工报告"}, {"seq": 57, "time_raw": "2026-11-15 01:07", "time": "2026-11-15 01:07", "name": "大总管", "status": "卡住", "note": "Hai 设置页找不到 Egress，界面说明里也没有这一项；建议 Hai 用自己的网络下载 QQ Linux deb 后发给我，再由我安装｜等 Hai 回复"}, {"seq": 56, "time_raw": "2026-11-15 01:05", "time": "2026-11-15 01:05", "name": "大总管", "status": "等Hai回复", "note": "更正：QQ 用 PC 桌面版，非安卓版；私信跟进退出微信。已停安卓模拟器安装；本机为Linux，待Hai定用官方Linux版QQ还是Wine跑Windows版，下载仍受403影响"}, {"seq": 55, "time_raw": "2026-11-15 01:04", "time": "2026-11-15 01:04", "name": "大总管", "status": "开始", "note": "私信跟进退出微信；Hai 改用 QQ 安卓桌面版：本机有KVM可跑安卓模拟器（无binder不能用Waydroid），开始安装模拟器并尝试官方QQ安卓包"}, {"seq": 54, "time_raw": "2026-11-15 01:03", "time": "2026-11-15 01:03", "name": "大总管", "status": "等Hai回复", "note": "QQ 改用桌面端下载安装：已通知私信跟进和评论回复只装官方桌面端；官方安装包对本机网络返回403，等Hai开启网络设置后重下"}, {"seq": 53, "time_raw": "2026-11-15 01:03", "time": "2026-11-15 01:03", "name": "评论回复", "status": "等Hai回复", "note": "微信已打开到扫码登录页，屏幕交给Hai扫码"}, {"seq": 52, "time_raw": "2026-11-15 01:01", "time": "2026-11-15 01:01", "name": "大总管", "status": "完成", "note": "查微信共用情况：系统装一份4.1.13.26全员可开；本机仅一个微信号的数据（Hai扫码给私信跟进的号）；无多用户设置，同一系统用户共用数据目录；同号同时只能一台电脑在线，多人同时用需不同微信号"}, {"seq": 51, "time_raw": "2026-11-15 01:01", "time": "2026-11-15 01:01", "name": "大总管", "status": "等Hai回复", "note": "QQ官方下载对本机网络返回403（私信跟进、评论回复都卡住）；评论回复微信已装好待定登录账号；私信跟进微信测试消息待Hai批准"}, {"seq": 50, "time_raw": "2026-11-15 01:00", "time": "2026-11-15 01:00", "name": "私信跟进", "status": "卡住", "note": "官方 Linux QQ 安装包下载被拒：Access to qqdl.gtimg.cn was denied... HTTP ERROR 403，curl 和浏览器都一样，没用非官方包"}, {"seq": 49, "time_raw": "2026-11-15 01:00", "time": "2026-11-15 01:00", "name": "大总管", "status": "完成", "note": "查存储：五位员工共用一台电脑硬盘，总128G已用7.0G剩121G；无单独云端空间"}, {"seq": 48, "time_raw": "2026-11-15 01:00", "time": "2026-11-15 01:00", "name": "评论回复", "status": "等Hai回复", "note": "微信官方客户端已在电脑上（之前已有人装过同版本4.1.13.26）；QQ官方下载报403；登录/注册前等Hai本人确认"}, {"seq": 47, "time_raw": "2026-11-15 00:59", "time": "2026-11-15 00:59", "name": "评论回复", "status": "开始", "note": "按大总管转达，恢复QQ任务并安装官方微信Linux客户端"}, {"seq": 46, "time_raw": "2026-11-15 00:59", "time": "2026-11-15 00:59", "name": "大总管", "status": "开始", "note": "私信和评论两位员工均安排下载微信和QQ：私信跟进微信已装好登录、QQ注册继续；评论回复恢复QQ注册并加装微信桌面端"}, {"seq": 45, "time_raw": "2026-11-15 00:59", "time": "2026-11-15 00:59", "name": "评论回复", "status": "完成", "note": "QQ任务按大总管通知已停止：只到下载安装包一步，官方链接从本机下载返回403，未安装、未打开注册页、未提交任何信息"}, {"seq": 44, "time_raw": "2026-11-15 00:59", "time": "2026-11-15 00:59", "name": "私信跟进", "status": "开始", "note": "按大总管转派，下载官方 Linux QQ 并准备注册 QQ 号"}, {"seq": 43, "time_raw": "2026-11-15 00:59", "time": "2026-11-15 00:59", "name": "大总管", "status": "开始", "note": "按 Hai 更正，QQ注册任务从评论回复改派给私信跟进，供Hai小号测试私信回复；已通知评论回复停止"}, {"seq": 42, "time_raw": "2026-11-15 00:58", "time": "2026-11-15 00:58", "name": "评论回复", "status": "开始", "note": "按大总管转达的任务，从官方渠道下载安装 Linux QQ，准备注册"}, {"seq": 41, "time_raw": "2026-11-15 00:58", "time": "2026-11-15 00:58", "name": "大总管", "status": "开始", "note": "安排员工下载QQ号供Hai小号测试回复：指定评论回复下载注册QQ"}, {"seq": 40, "time_raw": "2026-11-15 00:11", "time": "2026-11-15 00:11", "name": "大总管", "status": "开始", "note": "私信跟进确认微信桌面端完整登录（非仅传输文件），暂无求职者私信；按 Hai 语音指示让其向文件传输助手发测试消息"}, {"seq": 39, "time_raw": "2026-11-15 00:11", "time": "2026-11-15 00:11", "name": "私信跟进", "status": "等Hai回复", "note": "微信桌面版已完整登录，能看到会话列表，暂无求职者私信；测试消息草稿已交 Hai 批准，未发"}, {"seq": 38, "time_raw": "2026-11-15 00:11", "time": "2026-11-15 00:11", "name": "大总管", "status": "等Hai回复", "note": "私信跟进已装好微信官方Linux桌面端4.1.13.26；Hai称已扫码登录，已追问是否完整登录（非仅传输文件模式）及能否收发、是否可开始汇总草稿"}, {"seq": 37, "time_raw": "2026-11-15 00:08", "time": "2026-11-15 00:08", "name": "私信跟进", "status": "等Hai回复", "note": "微信桌面版已启动到扫码登录界面，已把屏幕交给 Hai 扫码"}, {"seq": 36, "time_raw": "2026-11-15 00:07", "time": "2026-11-15 00:07", "name": "私信跟进", "status": "开始", "note": "已装好微信官方 Linux 客户端 4.1.13.26，正在启动到登录二维码"}, {"seq": 35, "time_raw": "2026-11-15 00:07", "time": "2026-11-15 00:07", "name": "大总管", "status": "完成", "note": "已转告私信跟进：Hai 确认私信回复（含测试消息）一律先写草稿交 Hai 批准后再发，登录后汇总草稿给 Hai"}, {"seq": 34, "time_raw": "2026-11-15 00:06", "time": "2026-11-15 00:06", "name": "大总管", "status": "开始", "note": "按 Hai 语音指示，派私信跟进安装微信官方 Linux 客户端、扫码登录并向文件传输助手发测试消息；私信回复是否免批准已问 Hai"}, {"seq": 33, "time_raw": "2026-11-15 00:06", "time": "2026-11-15 00:06", "name": "私信跟进", "status": "卡住", "note": "微信网页版扫码后提示：为了保障你的账号安全，暂不支持使用网页版微信，登录失败，未发任何消息"}, {"seq": 32, "time_raw": "2026-11-15 00:06", "time": "2026-11-15 00:06", "name": "大总管", "status": "等Hai回复", "note": "Hai 称已扫码登录，已向私信跟进追问登录结果、所用方式、回复流程和报错，等其回报"}, {"seq": 31, "time_raw": "2026-11-15 00:05", "time": "2026-11-15 00:05", "name": "大总管", "status": "完成", "note": "核实微信：网页版 wx.qq.com 仍是扫码登录入口但不少账号会提示不能登录网页微信；官方有 Windows/Mac/Linux 客户端可扫码登录；第三方多开/协议工具不合规有封号风险，合规替代是企业微信；私信跟进目前在电脑浏览器里试网页版"}, {"seq": 30, "time_raw": "2026-11-15 00:02", "time": "2026-11-15 00:02", "name": "私信跟进", "status": "开始", "note": "按大总管转派，在我电脑上打开微信网页版登录页，看能否登录"}, {"seq": 29, "time_raw": "2026-11-15 00:02", "time": "2026-11-15 00:02", "name": "大总管", "status": "开始", "note": "按 Hai 语音指示，派私信跟进试登录微信并向文件传输助手发测试消息"}, {"seq": 28, "time_raw": "2026-11-14 23:56", "time": "2026-11-14 23:56", "name": "大总管", "status": "等Hai回复", "note": "五位待补问题已合并去重为19条，写入待Hai补充.md"}, {"seq": 27, "time_raw": "2026-11-14 23:56", "time": "2026-11-14 23:56", "name": "大总管", "status": "完成", "note": "验收：候选人台账、招聘帖模板、评论回复话术通过；私信话术库缺邀约报名和未回复跟进，退回"}, {"seq": 26, "time_raw": "2026-11-14 23:56", "time": "2026-11-14 23:56", "name": "大总管", "status": "完成", "note": "更正：本人此前 5 条记录时间为 UTC，实际为太平洋时间 2026-11-14 23:54–23:55；之后统一用太平洋时间"}, {"seq": 25, "time_raw": "2026-11-15 07:55", "time": "2026-11-14 23:55", "name": "大总管", "status": "完成", "note": "复验工厂信息表及两个csv，表头一致，验收通过"}, {"seq": 24, "time_raw": "2026-11-14 23:55", "time": "2026-11-14 23:55", "name": "引流获客", "status": "完成", "note": "更正：本人此前 4 条记录时间为 UTC，实际太平洋时间为 2026-11-14 23:54 前后；之后统一用太平洋时间"}, {"seq": 23, "time_raw": "2026-11-15 07:55", "time": "2026-11-14 23:55", "name": "引流获客", "status": "完成", "note": "招聘帖模板 2 版已交付 /home/box/company/草稿/招聘帖模板.md，待大总管验收"}, {"seq": 22, "time_raw": "2026-11-14 23:55", "time": "2026-11-14 23:55", "name": "工厂对接", "status": "完成", "note": "按大总管验收意见把两个 csv 表头改成和工厂信息表.md 完全一致"}, {"seq": 21, "time_raw": "2026-11-15 07:55", "time": "2026-11-14 23:55", "name": "大总管", "status": "完成", "note": "验收工厂信息表：md通过，csv表头与md不一致，退回工厂对接修改"}, {"seq": 20, "time_raw": "2026-11-15 07:55", "time": "2026-11-14 23:55", "name": "私信跟进", "status": "等Hai回复", "note": "已在工作群发职责和5个待 Hai 补充的问题（私信平台、谁来发、收费口径、合格标准、收集字段）"}, {"seq": 19, "time_raw": "2026-11-15 07:55", "time": "2026-11-14 23:55", "name": "引流获客", "status": "等Hai回复", "note": "已在工作群列出需要 Hai 补充的引流背景问题（平台、账号、咨询方式、预算）"}, {"seq": 18, "time_raw": "2026-11-14 23:54", "time": "2026-11-14 23:54", "name": "候选人跟进", "status": "等Hai回复", "note": "需要 Hai 告知候选人资料来源、面试体检入职流程和台账存放位置"}, {"seq": 17, "time_raw": "2026-11-14 23:54", "time": "2026-11-14 23:54", "name": "候选人跟进", "status": "完成", "note": "按首日分工建好候选人台账模板 /home/box/company/候选人台账.md（无任何候选人数据）"}, {"seq": 16, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "工厂对接", "status": "等Hai回复", "note": "已在工作群发职责和需 Hai 补充的工厂资料问题清单"}, {"seq": 15, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "评论回复", "status": "等Hai回复", "note": "已在工作群报职责和待补问题，等评论来源、收费口径和岗位表"}, {"seq": 14, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "大总管", "status": "等Hai回复", "note": "已在工作群发开工帖，等五位说明职责和待补信息后合并到待Hai补充.md"}, {"seq": 13, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "私信跟进", "status": "等Hai回复", "note": "三个工作文件模板已建好，目前没有私信来源和岗位表，等 Hai 告知私信在哪个平台、怎么拿到"}, {"seq": 12, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "评论回复", "status": "等Hai回复", "note": "模板已建好，缺岗位表和评论来源，需 Hai 告知评论在哪些平台、是否向求职者收费"}, {"seq": 11, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "评论回复", "status": "开始", "note": "读完总规则，搭建评论汇总表、话术库、意向用户清单模板"}, {"seq": 10, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "工厂对接", "status": "完成", "note": "按任务分配建好 工厂信息表.md（含在招岗位表和返佣结算跟踪表，全部「暂无」），交大总管验收"}, {"seq": 9, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "私信跟进", "status": "开始", "note": "读完总规则，建立私信汇总表、话术库、移交名单三个工作文件"}, {"seq": 8, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "工厂对接", "status": "等Hai回复", "note": "表格模板已建好，但还没有任何合作工厂资料，等 Hai 提供工厂名单和岗位、返佣信息"}, {"seq": 7, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "工厂对接", "status": "开始", "note": "读完总规则，建立在招岗位表和返佣结算跟踪表模板"}, {"seq": 6, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "大总管", "status": "等Hai回复", "note": "首日清单已排，缺工厂资料、引流平台、员工所在位置"}, {"seq": 5, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "大总管", "status": "开始", "note": "读总规则，排首日任务分配清单"}, {"seq": 4, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "候选人跟进", "status": "等Hai回复", "note": "目前没有任何候选人资料和在招岗位信息，需要 Hai 告知来源"}, {"seq": 3, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "候选人跟进", "status": "开始", "note": "读完总规则，建好空白候选人台账模板"}, {"seq": 2, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "引流获客", "status": "卡住", "note": "/home/box/company/ 下还没有任何在招岗位资料，无法写文案，已找大总管和 Hai 要资料"}, {"seq": 1, "time_raw": "2026-11-15 07:54", "time": "2026-11-14 23:54", "name": "引流获客", "status": "开始", "note": "读完总规则，准备为在招岗位写招聘文案"}], "unparsed_lines": [], "assignment_file": "2026-11-15.md"}</script>
+<script>
+(function () {
+  'use strict';
+  var DATA = null, LAST_TEXT = '';
+  try { DATA = JSON.parse(document.getElementById('data').textContent); LAST_TEXT = JSON.stringify(DATA); } catch (e) { DATA = null; }
+
+  var ST = {
+    '开始': { c: '#3b82f6', label: '开始（进行中）', short: '进行中' },
+    '完成': { c: '#22b35e', label: '完成', short: '完成' },
+    '卡住': { c: '#ef4444', label: '卡住', short: '卡住' },
+    '等Hai回复': { c: '#f59e0b', label: '等Hai回复', short: '等Hai回复' },
+    '暂无': { c: '#9aa3b2', label: '暂无', short: '暂无' }
+  };
+  var ROLES = [
+    { name: '大总管', duty: '派活与验收', work: 'files', shirt: '#e2574c', hair: '#4a3222', pants: '#3b4a6b' },
+    { name: '引流获客', duty: '招聘文案与发帖计划', work: 'type', shirt: '#3b8fe6', hair: '#2a2a33', pants: '#41506e' },
+    { name: '候选人跟进', duty: '候选人台账与入职跟进', work: 'phone', shirt: '#2fb36a', hair: '#7a4a24', pants: '#3f4a5e' },
+    { name: '工厂对接', duty: '岗位需求与返佣结算', work: 'phone', shirt: '#f2b33d', hair: '#333333', pants: '#4b3f35' },
+    { name: '评论回复', duty: '评论整理与回复草稿', work: 'watch', shirt: '#9c6ade', hair: '#5a3a22', pants: '#3b4a6b' },
+    { name: '私信跟进', duty: '私信咨询与回复草稿', work: 'type', shirt: '#f27fb2', hair: '#2a2a33', pants: '#4a4f66' },
+    { name: '暂无（待 Hai 指定）', duty: '暂无', work: 'none', empty: true }
+  ];
+  var WORK = { type: '打字', phone: '打电话', watch: '看屏幕', files: '翻文件' };
+  var selected = 0, showAll = false;
+
+  function emp(r) {
+    if (!DATA || !DATA.employees || r.empty) return null;
+    for (var i = 0; i < DATA.employees.length; i++) if (DATA.employees[i].name === r.name) return DATA.employees[i];
+    return null;
+  }
+  function statusOf(r) { var e = emp(r); return e && ST[e.status] ? e.status : '暂无'; }
+  function actionOf(r) {
+    if (r.empty) return '空工位';
+    var s = statusOf(r);
+    if (s === '开始') return WORK[r.work] + '（进行中）';
+    if (s === '完成') return '伸懒腰（头顶绿勾）';
+    if (s === '卡住') return '挠头（头顶红问号）';
+    if (s === '等Hai回复') return '等待（头顶等待气泡）';
+    return '暂无记录';
+  }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function pill(s) { var k = ST[s] ? s : '暂无'; var p = el('span', 'pill', ST[k].label); p.style.background = ST[k].c; return p; }
+  function nz(v) { return v == null || v === '' ? '暂无' : String(v); }
+  function ava(r) { var a = el('div', 'ava', r.empty ? '?' : r.name.charAt(0)); a.style.background = r.empty ? '#c3cad6' : r.shirt; return a; }
+
+  // ================= 3D 场景 =================
+  var G = null; // 场景状态
+  var stage = document.getElementById('stage'), labelsBox = document.getElementById('labels');
+
+  function fallback(msg) {
+    var f = el('div', 'fallback', msg + '　下方面板数据正常显示。'); stage.appendChild(f);
+    document.getElementById('hint').textContent = '3D 场景不可用'; document.querySelector('.hud .btns').style.display = 'none';
+  }
+  function hasWebGL() { try { var c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))); } catch (e) { return false; } }
+
+  function init3D() {
+    if (!window.THREE || !THREE.OrbitControls) { fallback('3D 引擎没有加载成功（vendor/ 目录缺文件）。'); return; }
+    if (!hasWebGL()) { fallback('当前浏览器不支持 WebGL，3D 场景无法显示。'); return; }
+    var T = THREE;
+    var renderer = new T.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+    stage.insertBefore(renderer.domElement, labelsBox);
+    var scene = new T.Scene(); scene.background = new T.Color('#bfe6ff'); scene.fog = new T.Fog('#cfeeff', 70, 140);
+    var camera = new T.PerspectiveCamera(32, 1, 0.1, 300);
+    var controls = new T.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI * 0.44; controls.minPolarAngle = 0.25;
+    controls.minDistance = 14; controls.maxDistance = 95; controls.autoRotateSpeed = 0.6; controls.target.set(0, 0.5, 0.5);
+
+    scene.add(new T.HemisphereLight('#ffffff', '#6fae62', 0.5));
+    var sun = new T.DirectionalLight('#fff1d6', 0.78); sun.position.set(-16, 32, 20); sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048); var sc = sun.shadow.camera; sc.left = -26; sc.right = 26; sc.top = 26; sc.bottom = -26; sc.near = 1; sc.far = 90;
+    sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02; scene.add(sun);
+    scene.add(new T.AmbientLight('#ffffff', 0.08));
+
+    var gm = new T.DataTexture(new Uint8Array([120, 120, 120, 255, 190, 190, 190, 255, 240, 240, 240, 255]), 3, 1, T.RGBAFormat);
+    gm.minFilter = gm.magFilter = T.NearestFilter; gm.generateMipmaps = false; gm.needsUpdate = true;
+    var MC = {};
+    function mat(c) { if (!MC[c]) MC[c] = new T.MeshToonMaterial({ color: c, gradientMap: gm }); return MC[c]; }
+    function own(c) { return new T.MeshToonMaterial({ color: c, gradientMap: gm }); }
+    function mesh(g, m, sh) { var o = new T.Mesh(g, m); o.castShadow = sh !== false; o.receiveShadow = true; return o; }
+    function rbox(w, h, d, c, r) { var rr = r == null ? Math.min(w, h, d) * 0.22 : Math.min(r, Math.min(w, h, d) / 2 - 0.001); return mesh(new T.RoundedBoxGeometry(w, h, d, 3, Math.max(rr, 0.001)), typeof c === 'string' ? mat(c) : c); }
+    function sph(r, c, ws, hs) { return mesh(new T.SphereGeometry(r, ws || 18, hs || 14), typeof c === 'string' ? mat(c) : c); }
+    function cyl(rt, rb, h, c, seg) { return mesh(new T.CylinderGeometry(rt, rb, h, seg || 18), typeof c === 'string' ? mat(c) : c); }
+    function cap(r, len, c) { return mesh(new T.CapsuleGeometry(r, len, 6, 12), typeof c === 'string' ? mat(c) : c); }
+    function at(p, o, x, y, z) { o.position.set(x, y, z); p.add(o); return o; }
+    function rnd(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+    // ---- 地面与外景 ----
+    at(scene, mesh(new T.CylinderGeometry(60, 60, 1, 64), mat('#6cc45a'), false), 0, -0.5, 0);
+    function tree(x, z, s) {
+      var g = new T.Group(); at(g, cyl(0.25, 0.35, 1.6, '#9a6a3f', 8), 0, 0.8, 0);
+      var leaf = new T.MeshStandardMaterial({ color: ['#4fbf63', '#3fae58', '#66c96b'][Math.floor(rnd(x + z) * 3)], flatShading: true, roughness: 0.9 });
+      at(g, mesh(new T.IcosahedronGeometry(1.25, 0), leaf), 0, 2.3, 0); at(g, mesh(new T.IcosahedronGeometry(0.9, 0), leaf), 0.3, 3.2, 0.1);
+      g.scale.setScalar(s); g.rotation.y = rnd(x * z) * 6; at(scene, g, x, 0, z);
+    }
+    for (var ti = 0; ti < 46; ti++) { var ang = ti / 46 * Math.PI * 2 + rnd(ti) * 0.12, rad = 23 + rnd(ti + 9) * 16; tree(Math.cos(ang) * rad * 1.1, Math.sin(ang) * rad, 0.8 + rnd(ti + 3) * 0.7); }
+    var flowerC = ['#ff7aa8', '#ffd43b', '#ffffff', '#ff9f43', '#b197fc'];
+    for (var fi = 0; fi < 90; fi++) { var fa = rnd(fi + 50) * Math.PI * 2, fr = 17.5 + rnd(fi + 80) * 9; var fl = sph(0.13, flowerC[fi % 5], 8, 6); fl.castShadow = false; at(scene, fl, Math.cos(fa) * fr * 1.12, 0.1, Math.sin(fa) * fr); }
+
+    // ---- 建筑底座、地板 ----
+    var FX = 14, FZ = 10, FY = 0.6;
+    at(scene, rbox(FX * 2 + 1.2, FY, FZ * 2 + 1.2, '#e9d3a8', 0.25), 0, FY / 2, 0);
+    function floorTex(c1, c2, n) {
+      var cv = document.createElement('canvas'); cv.width = cv.height = 128; var x = cv.getContext('2d');
+      x.fillStyle = c1; x.fillRect(0, 0, 128, 128); x.fillStyle = c2; x.fillRect(0, 0, 64, 64); x.fillRect(64, 64, 64, 64);
+      x.strokeStyle = 'rgba(0,0,0,.06)'; x.lineWidth = 2; x.strokeRect(0, 0, 64, 64); x.strokeRect(64, 64, 64, 64);
+      var t = new T.CanvasTexture(cv); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(n[0], n[1]); return t;
+    }
+    function plane(w, d, m, x, z, y) { var p = mesh(new T.PlaneGeometry(w, d), m, false); p.rotation.x = -Math.PI / 2; at(scene, p, x, y || FY + 0.01, z); return p; }
+    plane(FX * 2, FZ * 2, new T.MeshToonMaterial({ map: floorTex('#f6dcae', '#ecca8e', [14, 10]), gradientMap: gm }), 0, 0);
+    // 大总管办公室木地板
+    var OX0 = -FX, OX1 = -5, OZ0 = -FZ, OZ1 = -3;
+    plane(OX1 - OX0, OZ1 - OZ0, new T.MeshToonMaterial({ map: floorTex('#d9a36b', '#cf9660', [5, 4]), gradientMap: gm }), (OX0 + OX1) / 2, (OZ0 + OZ1) / 2, FY + 0.015);
+    // 走道
+    var stoneM = new T.MeshToonMaterial({ map: floorTex('#e3e1dc', '#d6d3cc', [2, 2]), gradientMap: gm });
+    plane(FX * 2, 2.2, stoneM, 0, -1.6, FY + 0.02);
+    plane(2.2, 11.4, stoneM, 2.8, 4.3, FY + 0.021);
+    // 休息区地毯
+    var LX0 = 5.2, LX1 = 13.4, LZ0 = 0.6, LZ1 = 9.4;
+    at(scene, rbox(LX1 - LX0, 0.06, LZ1 - LZ0, '#9fdc8f', 0.03), (LX0 + LX1) / 2, FY + 0.04, (LZ0 + LZ1) / 2);
+    at(scene, rbox(LX1 - LX0 - 1, 0.07, LZ1 - LZ0 - 1, '#b8e9a9', 0.03), (LX0 + LX1) / 2, FY + 0.05, (LZ0 + LZ1) / 2);
+
+    // ---- 墙 ----
+    var wallC = '#fff7ea', capC = '#ff9f6e';
+    function wall(x1, z1, x2, z2, h) {
+      h = h || 1.5; var len = Math.hypot(x2 - x1, z2 - z1), cx = (x1 + x2) / 2, cz = (z1 + z2) / 2, horiz = Math.abs(z2 - z1) < 0.01;
+      var w = at(scene, rbox(horiz ? len : 0.5, h, horiz ? 0.5 : len, wallC, 0.12), cx, FY + h / 2, cz);
+      at(scene, rbox(horiz ? len + 0.1 : 0.62, 0.18, horiz ? 0.62 : len + 0.1, capC, 0.08), cx, FY + h + 0.05, cz);
+      return w;
+    }
+    wall(-FX, -FZ, FX, -FZ); wall(-FX, -FZ, -FX, FZ); wall(FX, -FZ, FX, FZ);
+    wall(-FX, FZ, 1.7, FZ); wall(3.9, FZ, FX, FZ);
+    // 大门门柱
+    [1.45, 4.15].forEach(function (gx) { at(scene, rbox(0.6, 2.4, 0.7, '#ff9f6e', 0.18), gx, FY + 1.2, FZ); at(scene, sph(0.32, '#ffd166'), gx, FY + 2.6, FZ); });
+    // 办公室内墙，留门
+    wall(OX1, OZ0, OX1, OZ1, 1.3); wall(OX0, OZ1, -8.8, OZ1, 1.3); wall(-6.6, OZ1, OX1, OZ1, 1.3);
+
+    // ---- 装饰 ----
+    function plant(x, z, s) {
+      var g = new T.Group(); at(g, cyl(0.38, 0.3, 0.6, '#e07a4f', 14), 0, 0.3, 0); at(g, cyl(0.4, 0.4, 0.08, '#c86640', 14), 0, 0.6, 0);
+      var lm = new T.MeshStandardMaterial({ color: '#45b85f', flatShading: true, roughness: 0.9 });
+      at(g, mesh(new T.IcosahedronGeometry(0.55, 0), lm), 0, 1.05, 0); at(g, mesh(new T.IcosahedronGeometry(0.4, 0), lm), 0.25, 1.45, 0.1);
+      g.scale.setScalar(s || 1); at(scene, g, x, FY, z);
+    }
+    [[-13.2, 9.2], [13.2, -9.2], [-4.3, -9.2], [-4.3, 0.2], [1.1, 0.4], [4.5, 0.3], [13.2, 0.0], [-13.2, 0.2], [-13.2, -9.2], [-5.7, -3.7], [0.9, 9.2], [4.7, 9.2]]
+      .forEach(function (p, i) { plant(p[0], p[1], i < 2 ? 1.3 : 1); });
+    // 办公室：书架、文件柜、沙发、茶几、地毯、奖杯
+    (function () {
+      var bs = new T.Group(); at(bs, rbox(3.2, 2.4, 0.7, '#a66a3c', 0.08), 0, 1.2, 0);
+      var bc = ['#ef4444', '#3b82f6', '#f59e0b', '#22b35e', '#a855f7', '#ec4899', '#14b8a6'];
+      for (var s = 0; s < 2; s++) { at(bs, rbox(2.9, 0.08, 0.6, '#7e4f2c', 0.02), 0, 0.75 + s * 0.85, 0.05); for (var k = 0; k < 9; k++) at(bs, rbox(0.22, 0.55 + rnd(k + s) * 0.15, 0.45, bc[(k + s * 2) % 7], 0.04), -1.25 + k * 0.31, 1.1 + s * 0.85, 0.1); }
+      at(scene, bs, -8.0, FY, -9.35);
+      var fc = new T.Group(); at(fc, rbox(1.1, 1.7, 0.8, '#9fb0c3', 0.08), 0, 0.85, 0); for (var d = 0; d < 3; d++) at(fc, rbox(0.4, 0.08, 0.06, '#5f6b77', 0.02), 0, 0.4 + d * 0.5, 0.42);
+      at(scene, fc, -5.9, FY, -9.35);
+      var so = new T.Group(); at(so, rbox(2.6, 0.5, 1.1, '#c2414f', 0.2), 0, 0.45, 0); at(so, rbox(2.6, 0.9, 0.3, '#d65563', 0.14), 0, 0.85, -0.45);
+      at(so, rbox(0.3, 0.7, 1.1, '#b13442', 0.12), -1.3, 0.6, 0); at(so, rbox(0.3, 0.7, 1.1, '#b13442', 0.12), 1.3, 0.6, 0);
+      so.rotation.y = Math.PI / 2; at(scene, so, -13.0, FY, -5.6);
+      at(scene, rbox(1.2, 0.35, 1.6, '#e4b07a', 0.12), -11.4, FY + 0.35, -5.6);
+      at(scene, cyl(0.18, 0.18, 0.2, '#ffffff', 10), -11.3, FY + 0.62, -5.4);
+      at(scene, rbox(4.6, 0.05, 3.2, '#f6d27a', 0.03), -9.0, FY + 0.03, -5.9);
+      var tro = new T.Group(); at(tro, cyl(0.25, 0.3, 0.12, '#8a5a2b'), 0, 0.06, 0); at(tro, cyl(0.06, 0.06, 0.3, '#ffcc33'), 0, 0.27, 0); at(tro, cyl(0.25, 0.12, 0.35, '#ffcc33'), 0, 0.55, 0);
+      at(scene, tro, -6.8, FY + 2.4, -9.3);
+    })();
+    // 休息区：沙发、茶几、豆袋、饮水机、售货机、桌游台
+    (function () {
+      var so = new T.Group(); at(so, rbox(3.6, 0.55, 1.3, '#4c8ee8', 0.22), 0, 0.45, 0); at(so, rbox(3.6, 1.0, 0.35, '#5d9ef2', 0.16), 0, 0.9, -0.5);
+      at(so, rbox(0.35, 0.8, 1.3, '#3d7ad0', 0.14), -1.8, 0.6, 0); at(so, rbox(0.35, 0.8, 1.3, '#3d7ad0', 0.14), 1.8, 0.6, 0);
+      at(so, rbox(0.8, 0.5, 0.25, '#ffd166', 0.12), -1.0, 1.0, -0.2);
+      at(scene, so, 8.4, FY, 2.0);
+      at(scene, rbox(2.2, 0.4, 1.2, '#f0b27a', 0.14), 8.4, FY + 0.4, 4.2);
+      at(scene, cyl(0.2, 0.18, 0.3, '#ef4444', 10), 8.0, FY + 0.75, 4.1); at(scene, sph(0.22, '#ffd43b', 10, 8), 8.9, FY + 0.82, 4.3);
+      var bb = sph(0.75, '#ff8fab'); bb.scale.set(1, 0.65, 1); at(scene, bb, 6.4, FY + 0.45, 5.6);
+      var bb2 = sph(0.75, '#ffd166'); bb2.scale.set(1, 0.65, 1); at(scene, bb2, 10.6, FY + 0.45, 5.8);
+      var wd = new T.Group(); at(wd, rbox(0.9, 1.6, 0.8, '#f4f7fb', 0.14), 0, 0.8, 0); at(wd, cyl(0.32, 0.32, 0.8, new T.MeshToonMaterial({ color: '#7cc8ff', gradientMap: gm, transparent: true, opacity: 0.8 })), 0, 2.0, 0);
+      at(wd, rbox(0.3, 0.12, 0.1, '#5f6b77', 0.03), 0, 1.15, 0.42); at(scene, wd, 12.8, FY, 1.6);
+      var vm = new T.Group(); at(vm, rbox(1.4, 2.5, 1.0, '#ef4b4b', 0.14), 0, 1.25, 0);
+      at(vm, mesh(new T.PlaneGeometry(0.95, 1.3), new T.MeshBasicMaterial({ color: '#d7f2ff' }), false), -0.12, 1.55, 0.51);
+      var dc = ['#ffd43b', '#22b35e', '#3b82f6', '#ff7aa8']; for (var r = 0; r < 3; r++) for (var k = 0; k < 3; k++) at(vm, rbox(0.2, 0.25, 0.08, dc[(r + k) % 4], 0.03), -0.42 + k * 0.3, 1.95 - r * 0.4, 0.53);
+      at(vm, rbox(0.25, 0.9, 0.06, '#c63a3a', 0.03), 0.5, 1.5, 0.52); vm.rotation.y = -Math.PI / 2; at(scene, vm, 13.0, FY, 4.4);
+      var gt = new T.Group(); at(gt, cyl(1.0, 1.0, 0.12, '#2fa66a', 24), 0, 0.85, 0); at(gt, cyl(0.12, 0.25, 0.8, '#8a5a2b', 10), 0, 0.4, 0);
+      for (var s2 = 0; s2 < 3; s2++) at(gt, cyl(0.3, 0.3, 0.45, '#ffb36b', 12), Math.cos(s2 * 2.1) * 1.5, 0.22, Math.sin(s2 * 2.1) * 1.5);
+      at(scene, gt, 9.8, FY, 7.8);
+    })();
+
+    // ---- 气泡贴图 ----
+    function bubbleTex(kind, k) {
+      var cv = document.createElement('canvas'); cv.width = cv.height = 128; var x = cv.getContext('2d');
+      x.fillStyle = 'rgba(0,0,0,.12)'; x.beginPath(); x.arc(66, 60, 50, 0, Math.PI * 2); x.fill();
+      x.fillStyle = '#ffffff'; x.beginPath(); x.arc(62, 56, 50, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.moveTo(40, 92); x.lineTo(30, 122); x.lineTo(66, 100); x.fill();
+      x.lineWidth = 6; x.strokeStyle = kind === 'ok' ? '#22b35e' : kind === 'stuck' ? '#ef4444' : '#f59e0b';
+      x.beginPath(); x.arc(62, 56, 47, 0, Math.PI * 2); x.stroke();
+      if (kind === 'ok') { x.strokeStyle = '#22b35e'; x.lineWidth = 14; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); x.moveTo(36, 58); x.lineTo(55, 77); x.lineTo(88, 38); x.stroke(); }
+      else if (kind === 'stuck') { x.fillStyle = '#ef4444'; x.font = 'bold 80px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', 62, 60); }
+      else { for (var i = 0; i < 3; i++) { x.fillStyle = i <= k ? '#f59e0b' : '#fde7c0'; x.beginPath(); x.arc(36 + i * 26, 58, 10, 0, Math.PI * 2); x.fill(); } }
+      var t = new T.CanvasTexture(cv); return t;
+    }
+    var BT = { ok: bubbleTex('ok'), stuck: bubbleTex('stuck'), wait: [bubbleTex('wait', 0), bubbleTex('wait', 1), bubbleTex('wait', 2)] };
+
+    // ---- 工位与小人 ----
+    var POS = [[-9.6, -6.6], [-1.0, -6.3], [4.2, -6.3], [9.4, -6.3], [-11.0, 3.8], [-5.8, 3.8], [-0.6, 3.8]];
+    var stations = [], pickables = [];
+    function buildStation(i) {
+      var r = ROLES[i], g = new T.Group(); g.userData.idx = i;
+      var S = { g: g, role: r, idx: i };
+      S.rugMat = own('#9aa3b2'); S.rug = at(g, rbox(4.0, 0.08, 4.0, S.rugMat, 0.3), 0, FY + 0.06, 0); S.rug.castShadow = false;
+      // 桌子
+      at(g, rbox(2.8, 0.75, 1.0, '#d99a5b', 0.12), 0, FY + 0.45, -0.95); at(g, rbox(3.0, 0.14, 1.2, '#efb878', 0.06), 0, FY + 0.88, -0.95);
+      // 显示器
+      at(g, cyl(0.06, 0.12, 0.3, '#3b3f4a', 10), 0, FY + 1.1, -1.25);
+      at(g, rbox(1.25, 0.8, 0.12, '#3b3f4a', 0.06), 0, FY + 1.6, -1.25);
+      S.scrMat = new T.MeshBasicMaterial({ color: '#7fdcff' });
+      S.scr = at(g, mesh(new T.PlaneGeometry(1.08, 0.62), S.scrMat, false), 0, FY + 1.6, -1.18);
+      S.cursor = at(g, mesh(new T.PlaneGeometry(0.5, 0.06), new T.MeshBasicMaterial({ color: '#ffffff' }), false), -0.2, FY + 1.7, -1.175);
+      S.cursor2 = at(g, mesh(new T.PlaneGeometry(0.7, 0.06), new T.MeshBasicMaterial({ color: '#e6f8ff' }), false), -0.1, FY + 1.55, -1.175);
+      at(g, rbox(0.8, 0.06, 0.28, '#f4f4f4', 0.03), 0, FY + 0.98, -0.62);
+      // 文件、电话、杯子
+      at(g, rbox(0.5, 0.18, 0.38, '#ffffff', 0.03), -1.05, FY + 1.04, -0.85);
+      S.sheet = at(g, rbox(0.46, 0.03, 0.34, '#fffbe0', 0.01), -1.05, FY + 1.15, -0.85);
+      at(g, rbox(0.42, 0.14, 0.3, '#e0524a', 0.06), 1.05, FY + 1.02, -0.8);
+      S.handsetDesk = at(g, cap(0.07, 0.32, '#f06a60'), 1.05, FY + 1.14, -0.8); S.handsetDesk.rotation.z = Math.PI / 2;
+      at(g, cyl(0.11, 0.1, 0.2, ['#ffd43b', '#ff7aa8', '#7cc8ff', '#b197fc'][i % 4], 12), 0.75, FY + 1.05, -1.25);
+      // 椅子
+      at(g, rbox(1.0, 0.16, 0.95, '#7a5534', 0.06), 0, FY + 0.5, 0.45);
+      at(g, rbox(1.0, 1.0, 0.16, '#8c6440', 0.07), 0, FY + 1.0, 0.92);
+      at(g, cyl(0.07, 0.07, 0.4, '#555c66', 8), 0, FY + 0.22, 0.45);
+      if (!r.empty) {
+        var ch = new T.Group(); ch.position.set(0, FY + 0.55, 0.42); g.add(ch); S.ch = ch;
+        var skin = '#ffd9b8';
+        // 腿（坐姿，向前伸到桌下）
+        [-0.2, 0.2].forEach(function (lx) { var lg = cap(0.14, 0.45, r.pants); lg.rotation.x = Math.PI / 2; at(ch, lg, lx, 0.15, -0.35); at(ch, cap(0.14, 0.4, r.pants), lx, -0.15, -0.65); });
+        S.body = at(ch, cap(0.42, 0.45, r.shirt), 0, 0.7, 0);
+        S.headG = new T.Group(); at(ch, S.headG, 0, 1.55, 0);
+        at(S.headG, sph(0.52, skin, 22, 18), 0, 0, 0);
+        var hair = mesh(new T.SphereGeometry(0.55, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(r.hair)); hair.rotation.x = 0.35; at(S.headG, hair, 0, 0.04, 0.04);
+        at(S.headG, sph(0.06, '#2a2a33', 8, 6), -0.17, 0.02, -0.48); at(S.headG, sph(0.06, '#2a2a33', 8, 6), 0.17, 0.02, -0.48);
+        at(S.headG, sph(0.08, '#ffb3b3', 8, 6), -0.3, -0.12, -0.4); at(S.headG, sph(0.08, '#ffb3b3', 8, 6), 0.3, -0.12, -0.4);
+        function arm(side) {
+          var p = new T.Group(); at(ch, p, side * 0.5, 1.0, 0);
+          at(p, cap(0.12, 0.42, r.shirt), 0, -0.3, 0); var hand = at(p, sph(0.14, skin, 12, 10), 0, -0.62, 0); return { p: p, hand: hand };
+        }
+        S.armL = arm(-1); S.armR = arm(1);
+        S.handset = at(S.armR.hand, cap(0.07, 0.3, '#f06a60'), 0.02, 0.05, -0.05); S.handset.visible = false;
+        if (i === 0) { at(S.headG, cyl(0.2, 0.2, 0.08, '#ffcc33', 5), 0, 0.58, 0.05); }
+        ch.traverse(function (o) { if (o.isMesh) o.userData.idx = i; });
+      }
+      // 气泡
+      S.bubbleMat = new T.SpriteMaterial({ map: BT.ok, depthTest: true }); S.bubble = new T.Sprite(S.bubbleMat); S.bubble.scale.set(1.1, 1.1, 1); S.bubble.position.set(0.7, FY + 3.25, 0.4); S.bubble.visible = false; g.add(S.bubble);
+      g.traverse(function (o) { if (o.isMesh) { o.userData.idx = i; pickables.push(o); } });
+      S.bubble.userData.idx = i; pickables.push(S.bubble);
+      S.anchor = new T.Vector3(0, FY + 0.2, 2.2);
+      g.position.set(POS[i][0], 0, POS[i][1]); scene.add(g);
+      S.phase = rnd(i + 7) * 6;
+      return S;
+    }
+    for (var si = 0; si < ROLES.length; si++) stations.push(buildStation(si));
+    var ring = at(scene, mesh(new T.TorusGeometry(2.4, 0.08, 8, 48), new T.MeshBasicMaterial({ color: '#3b82f6' }), false), 0, FY + 0.15, 0); ring.rotation.x = -Math.PI / 2;
+
+    // ---- HTML 标签 ----
+    var tags = stations.map(function (S) {
+      var t = el('div', 'tag'); t.appendChild(el('b')); t.appendChild(el('i')); labelsBox.appendChild(t);
+      t.addEventListener('click', function () { select(S.idx); }); return t;
+    });
+    var zones = [{ text: '大总管办公室', p: new T.Vector3(-9.5, FY + 3.4, -10) }, { text: '休息区', p: new T.Vector3(9.3, FY + 0.3, 9.0) }, { text: '入口', p: new T.Vector3(2.8, FY + 3.1, FZ) }];
+    zones.forEach(function (z) { z.el = el('div', 'zone', z.text); labelsBox.appendChild(z.el); });
+
+    // ---- 相机 ----
+    var W = 1, H = 1, portrait = null, userMoved = false;
+    controls.addEventListener('start', function () { userMoved = true; });
+    function home() {
+      var hf = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect);
+      var dir, dist;
+      if (portrait) { dir = new T.Vector3(1, 1.15, 0.38).normalize(); dist = Math.max(28, 12 / Math.tan(hf)); controls.target.set(0, 0.5, 0.3); }
+      else { dir = new T.Vector3(0.32, 0.92, 1).normalize(); dist = Math.max(34, 17.5 / Math.tan(hf)); controls.target.set(0, 0.5, 0.6); }
+      camera.position.copy(controls.target).addScaledVector(dir, dist); controls.update(); userMoved = false;
+    }
+    function resize() {
+      W = stage.clientWidth; H = stage.clientHeight; renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix();
+      var p = W / H < 1.05; if (p !== portrait || !userMoved) { portrait = p; home(); }
+    }
+    window.addEventListener('resize', resize); resize();
+    document.getElementById('reset').addEventListener('click', function () { home(); });
+    var spinBtn = document.getElementById('spin');
+    spinBtn.addEventListener('click', function () { controls.autoRotate = !controls.autoRotate; spinBtn.className = controls.autoRotate ? 'on' : ''; });
+
+    // ---- 点击选人 ----
+    var ray = new T.Raycaster(), mv = new T.Vector2(), down = null;
+    renderer.domElement.addEventListener('pointerdown', function (e) { down = [e.clientX, e.clientY]; });
+    renderer.domElement.addEventListener('pointerup', function (e) {
+      if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+      var rc = renderer.domElement.getBoundingClientRect(); mv.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1);
+      ray.setFromCamera(mv, camera); var hit = ray.intersectObjects(pickables, false);
+      if (hit.length && hit[0].object.userData.idx != null) select(hit[0].object.userData.idx);
+    });
+
+    // ---- 动画 ----
+    var clock = new T.Clock(), tmp = new T.Vector3();
+    function animStation(S, t) {
+      var s = S.role.empty ? '暂无' : statusOf(S.role), act = s === '开始' ? S.role.work : s;
+      var off = S.role.empty || s === '暂无';
+      S.scrMat.color.set(off ? '#4a5563' : '#7fdcff'); S.cursor.visible = S.cursor2.visible = !off;
+      S.sheet.position.set(-1.05, FY + 1.15, -0.85); S.sheet.rotation.z = 0;
+      if (S.bubble.visible) { S.bubble.position.y = FY + 3.25 + Math.sin(t * 3 + S.phase) * 0.08; S.bubble.position.x = 0.7 + (s === '卡住' ? Math.sin(t * 30) * 0.03 : 0); if (s === '等Hai回复') S.bubbleMat.map = BT.wait[Math.floor(t * 2.5) % 3]; }
+      if (!S.ch) return;
+      var aL = S.armL.p.rotation, aR = S.armR.p.rotation, hd = S.headG.rotation;
+      aL.set(0.9, 0, 0); aR.set(0.9, 0, 0); hd.set(0, 0, 0); S.ch.position.y = FY + 0.55; S.ch.rotation.set(0, 0, 0);
+      S.handset.visible = false; S.handsetDesk.visible = true; S.body.scale.set(1, 1, 1);
+      if (act === 'type') {
+        aL.x = 1.2 + Math.sin(t * 16 + S.phase) * 0.14; aR.x = 1.2 + Math.sin(t * 16 + S.phase + Math.PI) * 0.14; aL.z = 0.12; aR.z = -0.12;
+        hd.x = 0.08; S.scrMat.color.set(Math.sin(t * 22 + S.phase) > 0.2 ? '#a6ecff' : '#7fdcff'); S.cursor.scale.x = 0.4 + ((t * 1.6 + S.phase) % 1) * 1.2; S.cursor.position.x = -0.45 + S.cursor.scale.x * 0.25;
+      } else if (act === 'phone') {
+        S.handsetDesk.visible = false; S.handset.visible = true;
+        aR.set(2.95, 0, 0.15); aL.x = 1.05 + Math.sin(t * 2 + S.phase) * 0.05; hd.z = -0.12 + Math.sin(t * 2.4 + S.phase) * 0.08; hd.x = Math.sin(t * 5 + S.phase) * 0.06;
+      } else if (act === 'watch') {
+        aL.x = 1.0; aR.x = 1.0; hd.x = 0.05 + Math.sin(t * 1.8 + S.phase) * 0.07; hd.y = Math.sin(t * 0.9 + S.phase) * 0.12;
+        var sc = 0.75 + 0.25 * Math.sin(t * 2 + S.phase); S.scrMat.color.setRGB(0.45 * sc + 0.1, 0.8 * sc + 0.1, 1); S.cursor2.position.y = FY + 1.45 + ((t * 0.4 + S.phase) % 1) * 0.3;
+      } else if (act === 'files') {
+        var k = (Math.sin(t * 2.6 + S.phase) + 1) / 2;
+        aL.set(1.05, 0, 0.55 - k * 0.5); aR.x = 1.1; hd.y = 0.25 - k * 0.3; hd.x = 0.12;
+        S.sheet.position.set(-1.05 + k * 0.7, FY + 1.15 + Math.sin(k * Math.PI) * 0.25, -0.85); S.sheet.rotation.z = Math.sin(k * Math.PI) * 0.6;
+      } else if (act === '完成') {
+        var u = Math.sin(t * 3 + S.phase);
+        aL.set(2.7 + u * 0.25, 0, 0.35); aR.set(2.7 - u * 0.25, 0, -0.35); hd.x = -0.15; S.ch.position.y = FY + 0.55 + Math.max(0, Math.sin(t * 6 + S.phase)) * 0.06; S.body.scale.y = 1.04;
+      } else if (act === '卡住') {
+        aR.set(2.85, 0, 0.55 + Math.sin(t * 14) * 0.18); aL.x = 0.7; hd.z = 0.18 + Math.sin(t * 2) * 0.05; hd.x = -0.05;
+      } else if (act === '等Hai回复') {
+        aL.set(0.55, 0, 0.35); aR.set(0.55, 0, -0.35); S.ch.rotation.y = Math.sin(t * 1.3 + S.phase) * 0.12; hd.x = -0.12 + Math.sin(t * 1.3) * 0.04;
+      } else {
+        aL.x = 0.4; aR.x = 0.4; hd.x = Math.sin(t + S.phase) * 0.03;
+      }
+    }
+    function project(v) { tmp.copy(v).project(camera); return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H, ok: tmp.z < 1 && tmp.z > -1 }; }
+    function loop() {
+      requestAnimationFrame(loop);
+      var t = clock.getElapsedTime();
+      stations.forEach(function (S) { animStation(S, t); });
+      var sel = stations[selected]; ring.position.x = sel.g.position.x; ring.position.z = sel.g.position.z; ring.scale.setScalar(1 + Math.sin(t * 4) * 0.04);
+      controls.update(); renderer.render(scene, camera);
+      stations.forEach(function (S, i) {
+        var wp = S.anchor.clone().add(S.g.position), p = project(wp), tg = tags[i];
+        tg.style.display = p.ok ? '' : 'none'; tg.style.left = p.x + 'px'; tg.style.top = p.y + 'px';
+      });
+      zones.forEach(function (z) { var p = project(z.p); z.el.style.display = p.ok ? '' : 'none'; z.el.style.left = p.x + 'px'; z.el.style.top = p.y + 'px'; });
+    }
+    G = {
+      apply: function () {
+        stations.forEach(function (S, i) {
+          var s = S.role.empty ? '暂无' : statusOf(S.role); S.rugMat.color.set(ST[s].c).lerp(new T.Color('#ffffff'), 0.55);
+          var b = s === '完成' ? BT.ok : s === '卡住' ? BT.stuck : s === '等Hai回复' ? BT.wait[0] : null;
+          S.bubble.visible = !!b && !S.role.empty; if (b) S.bubbleMat.map = b;
+          var tg = tags[i]; tg.style.setProperty('--c', ST[s].c); tg.className = 'tag' + (i === selected ? ' sel' : '');
+          tg.firstChild.textContent = S.role.empty ? S.role.name : S.role.name + ' · ' + ST[s].short;
+          tg.lastChild.textContent = S.role.empty ? '职责：暂无' : S.role.duty;
+        });
+      }
+    };
+    loop();
+  }
+
+  // ================= 面板 =================
+  function timeline(e, n) {
+    var ul = el('ul', 'tl'); var flow = e && e.flow ? e.flow.slice(-n).reverse() : [];
+    if (!flow.length) { ul.appendChild(el('li', null, '暂无')); return ul; }
+    flow.forEach(function (st) {
+      var li = el('li'); li.style.setProperty('--c', (ST[st.status] || ST['暂无']).c);
+      li.appendChild(el('span', 't', nz(st.time))); li.appendChild(pill(st.status)); li.appendChild(document.createTextNode(' ' + nz(st.note))); ul.appendChild(li);
+    });
+    return ul;
+  }
+  function assignText(e) { if (!e || !e.assignments || !e.assignments.length) return '暂无'; return e.assignments.map(function (a) { return (a.priority ? a.priority + '｜' : '') + nz(a.task); }).join('；'); }
+  function countsText(e) { if (!e || !e.count) return '暂无'; var c = e.counts || {}; return ['开始', '完成', '卡住', '等Hai回复'].map(function (k) { return k + ' ' + (c[k] != null ? c[k] : '暂无') + ' 条'; }).join(' · '); }
+  function acceptText(e) { if (!e || !e.acceptance || !e.acceptance.length) return '暂无'; var a = e.acceptance[e.acceptance.length - 1]; return nz(a.time) + '：' + nz(a.note); }
+  function kv(dl, k, v) { dl.appendChild(el('dt', null, k)); var dd = el('dd'); if (typeof v === 'string') dd.textContent = v; else dd.appendChild(v); dl.appendChild(dd); }
+
+  function renderDetail() {
+    var r = ROLES[selected], e = emp(r), s = statusOf(r), box = document.getElementById('detail'); box.innerHTML = '';
+    var w = el('div', 'who'); w.appendChild(ava(r)); var nm = el('div'); var h = el('h3', null, r.name + '　'); h.appendChild(pill(s)); nm.appendChild(h); nm.appendChild(el('div', 'muted', '职责：' + r.duty + '　·　动作：' + actionOf(r))); w.appendChild(nm); box.appendChild(w);
+    var dl = el('dl', 'kv');
+    kv(dl, '在干什么', e ? nz(e.note) : '暂无');
+    kv(dl, '最近时间', e && e.time && e.time !== '暂无' ? e.time + '（太平洋时间）' : '暂无');
+    kv(dl, '依据任务', assignText(e));
+    kv(dl, '交付物', e && e.assignments && e.assignments.length ? e.assignments.map(function (a) { return nz(a.deliverable); }).join('；') : '暂无');
+    kv(dl, '交付标准', e && e.assignments && e.assignments.length ? e.assignments.map(function (a) { return nz(a.standard); }).join('；') : '暂无');
+    kv(dl, '状态条数', countsText(e));
+    kv(dl, '最近验收', acceptText(e));
+    box.appendChild(dl);
+    box.appendChild(el('h3', 'sub', '做到哪一步（最近 6 条状态变化，新的在上）'));
+    box.appendChild(timeline(e, 6));
+  }
+  function renderWaiting() {
+    var box = document.getElementById('waiting'); box.innerHTML = '';
+    var list = DATA && DATA.waiting_for_hai ? DATA.waiting_for_hai : [];
+    if (!list.length) { box.appendChild(el('div', 'muted', '暂无')); return; }
+    list.forEach(function (w) {
+      var it = el('div', 'wait-item' + (w.status === '卡住' ? ' stuck' : '')); it.appendChild(el('b', null, w.name)); var d = el('div');
+      d.appendChild(pill(w.status)); d.appendChild(el('div', null, nz(w.note))); d.appendChild(el('div', 'muted', nz(w.time) + '（太平洋时间）'));
+      it.appendChild(d);
+      it.addEventListener('click', function () { for (var i = 0; i < ROLES.length; i++) if (ROLES[i].name === w.name) select(i, true); });
+      box.appendChild(it);
+    });
+  }
+  function renderCards() {
+    var box = document.getElementById('cards'); box.innerHTML = '';
+    ROLES.forEach(function (r, i) {
+      var e = emp(r), s = statusOf(r), card = el('div', 'ecard' + (i === selected ? ' sel' : ''));
+      var head = el('div', 'head'); head.appendChild(ava(r)); var g = el('div', 'grow'); g.appendChild(el('h3', null, r.name)); g.appendChild(el('div', 'muted', r.duty)); head.appendChild(g); head.appendChild(pill(s)); card.appendChild(head);
+      var dl = el('dl', 'kv');
+      kv(dl, '动作', actionOf(r)); kv(dl, '在干什么', e ? nz(e.note) : '暂无'); kv(dl, '依据任务', assignText(e)); kv(dl, '状态条数', countsText(e)); kv(dl, '最近验收', acceptText(e));
+      card.appendChild(dl); card.appendChild(el('div', 'sub muted', '最近步骤')); card.appendChild(timeline(e, 3));
+      card.addEventListener('click', function () { select(i, true); });
+      box.appendChild(card);
+    });
+  }
+  function renderLog() {
+    var who = document.getElementById('who').value || '全部', body = document.getElementById('logBody'); body.innerHTML = '';
+    var all = DATA && DATA.log_desc ? DATA.log_desc : [];
+    var rows = all.filter(function (l) { return who === '全部' || l.name === who; }), shown = showAll ? rows : rows.slice(0, 30);
+    document.getElementById('logCount').textContent = rows.length ? ('显示 ' + shown.length + ' / ' + rows.length + ' 条') : '';
+    document.getElementById('more').textContent = showAll ? '只看最近 30 条' : '显示全部';
+    if (!shown.length) { var tr = el('tr'); var td = el('td', null, '暂无'); td.colSpan = 4; tr.appendChild(td); body.appendChild(tr); return; }
+    shown.forEach(function (l) {
+      var tr = el('tr'); tr.appendChild(el('td', 'time', nz(l.time))); tr.appendChild(el('td', 'who', nz(l.name)));
+      var td = el('td'); td.appendChild(pill(l.status)); tr.appendChild(td); tr.appendChild(el('td', null, nz(l.note))); body.appendChild(tr);
+    });
+  }
+  function renderHeader() {
+    document.getElementById('updated').textContent = DATA && DATA.generated_at_pt ? DATA.generated_at_pt : '暂无';
+    document.getElementById('assignFile').textContent = DATA && DATA.assignment_file && DATA.assignment_file !== '暂无' ? '任务分配/' + DATA.assignment_file : '暂无';
+    var lg = document.getElementById('legend'); lg.innerHTML = '';
+    ['开始', '完成', '卡住', '等Hai回复', '暂无'].forEach(function (k) { var sp = el('span', 'chip'); var q = el('span', 'cdot'); q.style.background = ST[k].c; sp.appendChild(q); sp.appendChild(document.createTextNode(ST[k].label)); lg.appendChild(sp); });
+    var sel = document.getElementById('who'), cur = sel.value || '全部'; sel.innerHTML = '';
+    ['全部'].concat(ROLES.filter(function (r) { return !r.empty; }).map(function (r) { return r.name; })).forEach(function (n) { var o = el('option', null, n === '全部' ? '全部员工' : n); o.value = n; sel.appendChild(o); });
+    sel.value = cur;
+  }
+  function renderAll() { renderHeader(); renderDetail(); renderWaiting(); renderCards(); renderLog(); if (G) G.apply(); }
+  function select(i, scrollToScene) {
+    selected = i; renderDetail(); if (G) G.apply();
+    var cards = document.querySelectorAll('#cards .ecard'); for (var k = 0; k < cards.length; k++) cards[k].className = 'ecard' + (k === i ? ' sel' : '');
+    if (scrollToScene) document.getElementById('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  document.getElementById('who').addEventListener('change', renderLog);
+  document.getElementById('more').addEventListener('click', function () { showAll = !showAll; renderLog(); });
+
+  // ================= 数据同步 =================
+  function setSync(live, text) { document.getElementById('sync').className = 'sync' + (live ? ' live' : ''); document.getElementById('syncText').textContent = text; }
+  function pull(retry) {
+    retry = retry || 0;
+    if (!window.fetch || location.protocol === 'file:') { setSync(false, '本地文件：使用内嵌数据'); return; }
+    fetch('dashboard_data.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+      if (!j || !j.employees) throw new Error('bad');
+      var txt = JSON.stringify(j); if (txt !== LAST_TEXT) { DATA = j; LAST_TEXT = txt; renderAll(); }
+      var d = new Date(); setSync(true, '实时同步中 · ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' 检查（本机时间）');
+    }).catch(function (err) {
+      if (retry < 3) { setSync(false, '正在连接数据…'); setTimeout(function () { pull(retry + 1); }, 3000); return; }
+      setSync(false, '同步失败：使用当前数据' + (err && err.message ? '（' + err.message + '）' : ''));
+    });
+  }
+
+  try { init3D(); } catch (err) { G = null; fallback('3D 场景初始化失败。'); if (window.console) console.error(err); }
+  renderAll();
+  if (document.readyState === 'complete') setTimeout(pull, 500); else window.addEventListener('load', function () { setTimeout(pull, 500); });
+  setInterval(function () { pull(0); }, 60 * 1000);
+  setTimeout(function () { location.reload(); }, 60 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
